@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Mεmol - 30秒メモ</title>
+    <style>
+      /* ===== リセット ===== */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      button, textarea { font: inherit; color: inherit; border: 0; background: none; }
+      button { cursor: pointer; }
+      svg { display: block; flex-shrink: 0; }
+
+      /* ===== ベース ===== */
+      :root {
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-400: #9ca3af;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --teal-500: #14b8a6;
+        --teal-600: #0d9488;
+        --red-50: #fef2f2;
+        --red-100: #fee2e2;
+        --red-500: #ef4444;
+        --red-600: #dc2626;
+      }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', sans-serif;
+        line-height: 1.5;
+        background: var(--gray-50);
+        color: var(--gray-800);
+        height: 100vh;
+        height: 100dvh;
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        overscroll-behavior-y: none; /* スマホでのスクロールバウンスを防ぐ */
+      }
+
+      /* ===== レイアウト ===== */
+      .app {
+        width: 100%;
+        max-width: 28rem;
+        height: 100%;
+        background: #fff;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid var(--gray-100);
+        background: #fff;
+        z-index: 10;
+      }
+      h1 {
+        font-size: 1.5rem;
+        line-height: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: var(--gray-800);
+        display: flex;
+        align-items: baseline;
+      }
+      h1 .accent { color: var(--teal-500); }
+      h1 .ver {
+        font-size: 13px;
+        color: var(--gray-400);
+        margin-left: 0.5rem;
+        letter-spacing: normal;
+      }
+
+      #save-indicator {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--teal-500);
+        opacity: 0;
+        transition: opacity 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      main {
+        flex: 1;
+        min-height: 0;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+      #main-editor {
+        width: 100%;
+        height: 100%;
+        padding: 1.25rem;
+        font-size: 1.125rem;
+        line-height: 1.625;
+        resize: none;
+        outline: none;
+        background: transparent;
+      }
+      #main-editor::placeholder { color: #94a3b8; font-weight: 400; }
+
+      footer {
+        padding: 1rem 1rem calc(2rem + env(safe-area-inset-bottom, 0px));
+        background: #fff;
+        border-top: 1px solid var(--gray-100);
+        display: flex;
+        gap: 0.75rem;
+        z-index: 10;
+      }
+      @media (min-width: 640px) {
+        footer { padding-bottom: 1rem; }
+      }
+
+      /* ===== ボタン ===== */
+      .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 500;
+        transition: all 0.15s;
+      }
+      .btn:active { transform: scale(0.95); }
+      .btn-gray { background: var(--gray-100); color: var(--gray-700); }
+      .btn-gray:hover { background: var(--gray-200); }
+      .btn-teal {
+        background: var(--teal-500);
+        color: #fff;
+        box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.3), 0 4px 6px -4px rgba(20, 184, 166, 0.3);
+      }
+      .btn-teal:hover { background: var(--teal-600); }
+      .btn-red {
+        background: var(--red-500);
+        color: #fff;
+        box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3), 0 4px 6px -4px rgba(239, 68, 68, 0.3);
+      }
+      .btn-red:hover { background: var(--red-600); }
+      #btn-history { flex: 1; }
+      #btn-save-new { flex: 2; }
+
+      /* ===== 履歴パネル (Bottom Sheet) ===== */
+      #history-panel {
+        position: absolute;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        pointer-events: none;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #history-panel.open { transform: translateY(0); }
+      #history-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .sheet {
+        background: var(--gray-50);
+        height: 85%;
+        border-radius: 1.5rem 1.5rem 0 0;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        pointer-events: auto;
+        position: relative;
+        z-index: 10;
+      }
+      .sheet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem;
+        background: #fff;
+        border-radius: 1.5rem 1.5rem 0 0;
+        border-bottom: 1px solid var(--gray-200);
+      }
+      .sheet-header h2 { font-size: 1.125rem; font-weight: 700; color: var(--gray-800); }
+      #btn-close-history {
+        padding: 0.5rem;
+        background: var(--gray-100);
+        border-radius: 9999px;
+        color: var(--gray-600);
+        transition: all 0.15s;
+      }
+      #btn-close-history:hover { background: var(--gray-200); }
+      #btn-close-history:active { transform: scale(0.95); }
+
+      #history-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      #history-list::-webkit-scrollbar { display: none; }
+
+      .empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 10rem;
+        color: var(--gray-400);
+        font-size: 0.875rem;
+        gap: 0.5rem;
+      }
+      .empty svg { opacity: 0.5; }
+
+      .card {
+        background: #fff;
+        padding: 1rem;
+        border-radius: 1rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--gray-100);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .card-text {
+        color: var(--gray-700);
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.875rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.25rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--gray-50);
+      }
+      .card-time { font-size: 0.75rem; color: var(--gray-400); font-weight: 500; }
+      .card-actions { display: flex; gap: 0.5rem; }
+      .icon-btn {
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        transition: background-color 0.15s;
+      }
+      .icon-btn.copy { background: var(--gray-50); color: var(--gray-600); }
+      .icon-btn.copy:hover { background: var(--gray-100); }
+      .icon-btn.del { background: var(--red-50); color: var(--red-500); }
+      .icon-btn.del:hover { background: var(--red-100); }
+
+      /* ===== トースト ===== */
+      #toast {
+        position: absolute;
+        top: 4rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--gray-800);
+        color: #fff;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        z-index: 70;
+        white-space: nowrap;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* ===== 削除確認モーダル ===== */
+      #confirm-modal {
+        position: absolute;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      #confirm-modal.open { pointer-events: auto; }
+      #confirm-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      #confirm-modal.open #confirm-backdrop { opacity: 1; }
+      #confirm-dialog {
+        background: #fff;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        width: 85%;
+        max-width: 24rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        transform: scale(0.95);
+        opacity: 0;
+        transition: all 0.3s;
+        position: relative;
+        z-index: 10;
+      }
+      #confirm-modal.open #confirm-dialog { transform: scale(1); opacity: 1; }
+      #confirm-dialog h3 { font-size: 1.125rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.5rem; }
+      #confirm-dialog p { font-size: 0.875rem; color: var(--gray-600); margin-bottom: 1.5rem; }
+      #confirm-dialog .row { display: flex; gap: 0.75rem; }
+      #confirm-dialog .btn { flex: 1; padding: 0.625rem 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- ヘッダー -->
+      <header>
+        <h1>
+          M<span class="accent">ε</span>mol
+          <span class="ver">- v0.01</span>
+        </h1>
+        <div id="save-indicator">
+          <span data-icon="check" data-size="14"></span>
+          保存済み
+        </div>
+      </header>
+
+      <!-- メイン入力エリア -->
+      <main>
+        <textarea id="main-editor" placeholder="ここにパパッとメモ..."></textarea>
+      </main>
+
+      <!-- 下部アクションバー -->
+      <footer>
+        <button id="btn-history" class="btn btn-gray">
+          <span data-icon="list" data-size="20"></span>
+          履歴
+        </button>
+        <button id="btn-save-new" class="btn btn-teal">
+          <span data-icon="send" data-size="20"></span>
+          保存して次へ
+        </button>
+      </footer>
+
+      <!-- 履歴パネル (Bottom Sheet) -->
+      <div id="history-panel">
+        <div id="history-backdrop"></div>
+        <div class="sheet">
+          <div class="sheet-header">
+            <h2>過去のメモ</h2>
+            <button id="btn-close-history" aria-label="閉じる">
+              <span data-icon="x" data-size="18"></span>
+            </button>
+          </div>
+          <div id="history-list"></div>
+        </div>
+      </div>
+
+      <!-- トースト通知 -->
+      <div id="toast">コピーしました</div>
+
+      <!-- 削除確認モーダル -->
+      <div id="confirm-modal">
+        <div id="confirm-backdrop"></div>
+        <div id="confirm-dialog">
+          <h3>メモを削除しますか？</h3>
+          <p>この操作は取り消せません。</p>
+          <div class="row">
+            <button id="btn-cancel-delete" class="btn btn-gray">キャンセル</button>
+            <button id="btn-confirm-delete" class="btn btn-red">削除する</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+          // --- アイコン（インラインSVG。外部読み込み不要） ---
+          const ICONS = {
+              check: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+              list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+              send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+              x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+              copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+              trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+              file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
+          };
+          function icon(name, size) {
+              return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+          }
+          document.querySelectorAll('[data-icon]').forEach(el => {
+              el.outerHTML = icon(el.dataset.icon, el.dataset.size || 20);
+          });
+
+          // --- UI Elements ---
+          const editor = document.getElementById('main-editor');
+          const indicator = document.getElementById('save-indicator');
+          const btnSaveNew = document.getElementById('btn-save-new');
+          const btnHistory = document.getElementById('btn-history');
+          const historyPanel = document.getElementById('history-panel');
+          const historyBackdrop = document.getElementById('history-backdrop');
+          const btnCloseHistory = document.getElementById('btn-close-history');
+          const historyList = document.getElementById('history-list');
+          const toast = document.getElementById('toast');
+
+          const confirmModal = document.getElementById('confirm-modal');
+          const confirmBackdrop = document.getElementById('confirm-backdrop');
+          const btnCancelDelete = document.getElementById('btn-cancel-delete');
+          const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+
+          // --- State ---
+          const STORAGE_KEY_CURRENT = 'memol_current_draft';
+          const STORAGE_KEY_HISTORY = 'memol_history';
+          let saveTimeout;
+          let memoToDeleteId = null;
+
+          // --- Initialize ---
+          // 前回書きかけのメモがあれば復元
+          const savedDraft = localStorage.getItem(STORAGE_KEY_CURRENT);
+          if (savedDraft) {
+              editor.value = savedDraft;
+          }
+
+          // ロード時に自動的にフォーカスを当てる
+          setTimeout(() => editor.focus(), 100);
+
+          // --- Event Listeners ---
+
+          // 入力中の自動保存機能
+          editor.addEventListener('input', () => {
+              localStorage.setItem(STORAGE_KEY_CURRENT, editor.value);
+
+              clearTimeout(saveTimeout);
+              indicator.style.opacity = '1';
+              saveTimeout = setTimeout(() => {
+                  indicator.style.opacity = '0';
+              }, 2000);
+          });
+
+          // 「保存して次へ」ボタン
+          btnSaveNew.addEventListener('click', () => {
+              const text = editor.value.trim();
+              if (!text) {
+                  showToast('メモが空です');
+                  return;
+              }
+
+              saveToHistory(text);
+
+              editor.value = '';
+              localStorage.removeItem(STORAGE_KEY_CURRENT);
+              editor.focus();
+
+              showToast('保存しました');
+          });
+
+          // 履歴パネルの開閉
+          btnHistory.addEventListener('click', () => {
+              renderHistory();
+              historyPanel.classList.add('open');
+              historyBackdrop.style.opacity = '1';
+              historyBackdrop.style.pointerEvents = 'auto';
+          });
+
+          const closeHistory = () => {
+              historyPanel.classList.remove('open');
+              historyBackdrop.style.opacity = '0';
+              historyBackdrop.style.pointerEvents = 'none';
+              setTimeout(() => editor.focus(), 300);
+          };
+
+          btnCloseHistory.addEventListener('click', closeHistory);
+          historyBackdrop.addEventListener('click', closeHistory);
+
+          btnCancelDelete.addEventListener('click', closeConfirmModal);
+          confirmBackdrop.addEventListener('click', closeConfirmModal);
+
+          btnConfirmDelete.addEventListener('click', () => {
+              if (memoToDeleteId) {
+                  deleteFromHistory(memoToDeleteId);
+                  showToast('削除しました');
+                  closeConfirmModal();
+              }
+          });
+
+          // --- Functions ---
+
+          function saveToHistory(text) {
+              const history = getHistory();
+              history.unshift({
+                  id: Date.now().toString(),
+                  text: text,
+                  timestamp: new Date().toISOString()
+              });
+              localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+          }
+
+          function getHistory() {
+              try {
+                  const data = localStorage.getItem(STORAGE_KEY_HISTORY);
+                  return data ? JSON.parse(data) : [];
+              } catch (e) {
+                  return [];
+              }
+          }
+
+          function deleteFromHistory(id) {
+              const history = getHistory().filter(memo => memo.id !== id);
+              localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+              renderHistory();
+          }
+
+          function renderHistory() {
+              const history = getHistory();
+              historyList.innerHTML = '';
+
+              if (history.length === 0) {
+                  historyList.innerHTML = `
+                      <div class="empty">
+                          ${icon('file', 40)}
+                          <p>保存されたメモはありません</p>
+                      </div>
+                  `;
+                  return;
+              }
+
+              history.forEach(memo => {
+                  const date = new Date(memo.timestamp);
+                  const formattedDate = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+                  const card = document.createElement('div');
+                  card.className = 'card';
+
+                  const textDiv = document.createElement('div');
+                  textDiv.className = 'card-text';
+                  textDiv.textContent = memo.text;
+
+                  const footer = document.createElement('div');
+                  footer.className = 'card-footer';
+
+                  const timeSpan = document.createElement('span');
+                  timeSpan.className = 'card-time';
+                  timeSpan.textContent = formattedDate;
+
+                  const actionDiv = document.createElement('div');
+                  actionDiv.className = 'card-actions';
+
+                  const btnCopy = document.createElement('button');
+                  btnCopy.className = 'icon-btn copy';
+                  btnCopy.setAttribute('aria-label', 'コピー');
+                  btnCopy.innerHTML = icon('copy', 16);
+                  btnCopy.onclick = () => copyToClipboard(memo.text);
+
+                  const btnDelete = document.createElement('button');
+                  btnDelete.className = 'icon-btn del';
+                  btnDelete.setAttribute('aria-label', '削除');
+                  btnDelete.innerHTML = icon('trash', 16);
+                  btnDelete.onclick = () => openConfirmModal(memo.id);
+
+                  actionDiv.appendChild(btnCopy);
+                  actionDiv.appendChild(btnDelete);
+                  footer.appendChild(timeSpan);
+                  footer.appendChild(actionDiv);
+                  card.appendChild(textDiv);
+                  card.appendChild(footer);
+                  historyList.appendChild(card);
+              });
+          }
+
+          function copyToClipboard(text) {
+              if (navigator.clipboard && window.isSecureContext) {
+                  navigator.clipboard.writeText(text).then(
+                      () => showToast('コピーしました'),
+                      () => fallbackCopy(text)
+                  );
+              } else {
+                  fallbackCopy(text);
+              }
+          }
+
+          function fallbackCopy(text) {
+              const textArea = document.createElement('textarea');
+              textArea.value = text;
+              textArea.style.position = 'fixed';
+              textArea.style.left = '-999999px';
+              textArea.style.top = '-999999px';
+              document.body.appendChild(textArea);
+              textArea.focus();
+              textArea.select();
+              try {
+                  document.execCommand('copy');
+                  showToast('コピーしました');
+              } catch (err) {
+                  console.error('コピーに失敗しました', err);
+              }
+              textArea.remove();
+          }
+
+          let toastTimeout;
+          function showToast(message) {
+              toast.textContent = message;
+              toast.style.opacity = '1';
+              clearTimeout(toastTimeout);
+              toastTimeout = setTimeout(() => {
+                  toast.style.opacity = '0';
+              }, 2000);
+          }
+
+          function openConfirmModal(id) {
+              memoToDeleteId = id;
+              confirmModal.classList.add('open');
+          }
+
+          function closeConfirmModal() {
+              memoToDeleteId = null;
+              confirmModal.classList.remove('open');
+          }
+      });
+    </script>
+  </body>
+</html>
