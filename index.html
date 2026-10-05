@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mεmol - 30秒メモ</title>
+    <style>
+      body {
+          font-family: 'Inter', 'Noto Sans JP', sans-serif;
+          /* スマホでのスクロールバウンスを防ぐ */
+          overscroll-behavior-y: none;
+      }
+      /* スクロールバーを非表示にするがスクロールは可能にする */
+      .no-scrollbar::-webkit-scrollbar {
+          display: none;
+      }
+      .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+      }
+
+      /* 履歴パネルのスライドアニメーション */
+      .history-panel {
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          transform: translateY(100%);
+      }
+      .history-panel.open {
+          transform: translateY(0);
+      }
+
+      /* 入力エリアのプレースホルダーの色調整 */
+      textarea::placeholder {
+          color: #94a3b8;
+          font-weight: 400;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 h-[100dvh] w-full overflow-hidden text-gray-800 flex justify-center">
+    <!-- スマホサイズに制限したコンテナ（PCで見てもスマホアプリっぽくするため） -->
+    <div class="w-full max-w-md h-full bg-white shadow-xl relative flex flex-col">
+      <!-- ヘッダー -->
+      <header class="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-white z-10">
+        <h1 class="text-2xl font-bold tracking-tight text-gray-800 flex items-baseline">
+          M
+          <span class="text-teal-500">ε</span>
+          mol
+          <span class="text-[13px] text-gray-400 ml-2 font-bold tracking-normal">- v0.01</span>
+        </h1>
+        <div
+          id="save-indicator"
+          class="text-xs font-medium text-teal-500 opacity-0 transition-opacity duration-300 flex items-center gap-1"
+        >
+          <i class="ph ph-check-circle text-sm"></i>
+          保存済み
+        </div>
+      </header>
+
+      <!-- メイン入力エリア -->
+      <main class="flex-1 relative flex flex-col w-full h-full">
+        <textarea
+          id="main-editor"
+          class="w-full h-full p-5 text-lg leading-relaxed resize-none focus:outline-none bg-transparent"
+          placeholder="ここにパパッとメモ..."
+        ></textarea>
+      </main>
+
+      <!-- 下部アクションバー -->
+      <footer class="p-4 bg-white border-t border-gray-100 flex gap-3 z-10 pb-8 sm:pb-4">
+        <button
+          id="btn-history"
+          class="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-200 active:scale-95 transition-all"
+        >
+          <i class="ph ph-list-dashes text-xl"></i>
+          履歴
+        </button>
+        <button
+          id="btn-save-new"
+          class="flex-[2] py-3 px-4 bg-teal-500 text-white rounded-xl font-medium flex items-center justify-center gap-2 shadow-lg shadow-teal-500/30 hover:bg-teal-600 active:scale-95 transition-all"
+        >
+          <i class="ph ph-paper-plane-tilt text-xl"></i>
+          保存して次へ
+        </button>
+      </footer>
+
+      <!-- 履歴パネル (Bottom Sheet) -->
+      <div id="history-panel" class="history-panel absolute inset-0 z-50 flex flex-col justify-end pointer-events-none">
+        <!-- 背景の暗転 -->
+        <div id="history-backdrop" class="absolute inset-0 bg-black/20 opacity-0 transition-opacity duration-300"></div>
+
+        <!-- パネル本体 -->
+        <div class="bg-gray-50 h-[85%] rounded-t-3xl shadow-2xl flex flex-col pointer-events-auto relative z-10">
+          <!-- パネルヘッダー -->
+          <div class="flex items-center justify-between p-5 bg-white rounded-t-3xl border-b border-gray-200">
+            <h2 class="text-lg font-bold text-gray-800">過去のメモ</h2>
+            <button
+              id="btn-close-history"
+              class="p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 active:scale-95 transition-all"
+            >
+              <i class="ph ph-x text-lg"></i>
+            </button>
+          </div>
+
+          <!-- 履歴リスト -->
+          <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
+            <!-- JavaScriptでここにメモが追加されます -->
+          </div>
+        </div>
+      </div>
+
+      <!-- コピー完了などのトースト通知 -->
+      <div
+        id="toast"
+        class="absolute top-16 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-full text-sm font-medium opacity-0 pointer-events-none transition-opacity duration-300 z-50 shadow-lg"
+      >
+        コピーしました
+      </div>
+
+      <!-- 削除確認モーダル -->
+      <div id="confirm-modal" class="absolute inset-0 z-[60] flex items-center justify-center pointer-events-none">
+        <div id="confirm-backdrop" class="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300"></div>
+        <div
+          id="confirm-dialog"
+          class="bg-white rounded-2xl p-6 w-[85%] max-w-sm shadow-2xl transform scale-95 opacity-0 transition-all duration-300 relative z-10"
+        >
+          <h3 class="text-lg font-bold text-gray-800 mb-2">メモを削除しますか？</h3>
+          <p class="text-gray-600 text-sm mb-6">この操作は取り消せません。</p>
+          <div class="flex gap-3">
+            <button
+              id="btn-cancel-delete"
+              class="flex-1 py-2.5 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 active:scale-95 transition-all"
+            >
+              キャンセル
+            </button>
+            <button
+              id="btn-confirm-delete"
+              class="flex-1 py-2.5 px-4 bg-red-500 text-white rounded-xl font-medium shadow-lg shadow-red-500/30 hover:bg-red-600 active:scale-95 transition-all"
+            >
+              削除する
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+          // --- UI Elements ---
+          const editor = document.getElementById('main-editor');
+          const indicator = document.getElementById('save-indicator');
+          const btnSaveNew = document.getElementById('btn-save-new');
+          const btnHistory = document.getElementById('btn-history');
+          const historyPanel = document.getElementById('history-panel');
+          const historyBackdrop = document.getElementById('history-backdrop');
+          const btnCloseHistory = document.getElementById('btn-close-history');
+          const historyList = document.getElementById('history-list');
+          const toast = document.getElementById('toast');
+
+          const confirmModal = document.getElementById('confirm-modal');
+          const confirmBackdrop = document.getElementById('confirm-backdrop');
+          const confirmDialog = document.getElementById('confirm-dialog');
+          const btnCancelDelete = document.getElementById('btn-cancel-delete');
+          const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+
+          // --- State ---
+          const STORAGE_KEY_CURRENT = 'memol_current_draft';
+          const STORAGE_KEY_HISTORY = 'memol_history';
+          let saveTimeout;
+          let memoToDeleteId = null;
+
+          // --- Initialize ---
+          // 前回書きかけのメモがあれば復元
+          const savedDraft = localStorage.getItem(STORAGE_KEY_CURRENT);
+          if (savedDraft) {
+              editor.value = savedDraft;
+          }
+
+          // ロード時に自動的にフォーカスを当てる（PC向け。スマホはOSによってソフトウェアキーボードが自動で出ない場合があります）
+          setTimeout(() => editor.focus(), 100);
+
+          // --- Event Listeners ---
+
+          // 入力中の自動保存機能
+          editor.addEventListener('input', () => {
+              const text = editor.value;
+              localStorage.setItem(STORAGE_KEY_CURRENT, text);
+
+              // 保存完了のインジケーターを表示（少し遅らせて自然に）
+              clearTimeout(saveTimeout);
+              indicator.style.opacity = '1';
+              saveTimeout = setTimeout(() => {
+                  indicator.style.opacity = '0';
+              }, 2000);
+          });
+
+          // 「保存して次へ」ボタン
+          btnSaveNew.addEventListener('click', () => {
+              const text = editor.value.trim();
+              if (!text) {
+                  showToast('メモが空です');
+                  return;
+              }
+
+              saveToHistory(text);
+
+              // 画面をクリア
+              editor.value = '';
+              localStorage.removeItem(STORAGE_KEY_CURRENT);
+              editor.focus();
+
+              showToast('保存しました');
+          });
+
+          // 履歴パネルの開閉
+          btnHistory.addEventListener('click', () => {
+              renderHistory();
+              historyPanel.classList.add('open');
+              historyBackdrop.style.opacity = '1';
+              historyBackdrop.style.pointerEvents = 'auto';
+          });
+
+          const closeHistory = () => {
+              historyPanel.classList.remove('open');
+              historyBackdrop.style.opacity = '0';
+              historyBackdrop.style.pointerEvents = 'none';
+              setTimeout(() => editor.focus(), 300); // 閉じた後に再びフォーカス
+          };
+
+          btnCloseHistory.addEventListener('click', closeHistory);
+          historyBackdrop.addEventListener('click', closeHistory);
+
+          btnCancelDelete.addEventListener('click', closeConfirmModal);
+          confirmBackdrop.addEventListener('click', closeConfirmModal);
+
+          btnConfirmDelete.addEventListener('click', () => {
+              if (memoToDeleteId) {
+                  deleteFromHistory(memoToDeleteId);
+                  showToast('削除しました');
+                  closeConfirmModal();
+              }
+          });
+
+          // --- Functions ---
+
+          // 履歴に保存
+          function saveToHistory(text) {
+              let history = getHistory();
+              const newMemo = {
+                  id: Date.now().toString(),
+                  text: text,
+                  timestamp: new Date().toISOString()
+              };
+              // 先頭に追加
+              history.unshift(newMemo);
+              localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+          }
+
+          // 履歴の取得
+          function getHistory() {
+              try {
+                  const data = localStorage.getItem(STORAGE_KEY_HISTORY);
+                  return data ? JSON.parse(data) : [];
+              } catch (e) {
+                  return [];
+              }
+          }
+
+          // 履歴を削除
+          function deleteFromHistory(id) {
+              let history = getHistory();
+              history = history.filter(memo => memo.id !== id);
+              localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+              renderHistory(); // 再描画
+          }
+
+          // 履歴リストの描画
+          function renderHistory() {
+              const history = getHistory();
+              historyList.innerHTML = '';
+
+              if (history.length === 0) {
+                  historyList.innerHTML = `
+                      <div class="flex flex-col items-center justify-center h-40 text-gray-400">
+                          <i class="ph ph-files text-4xl mb-2 opacity-50"></i>
+                          <p class="text-sm">保存されたメモはありません</p>
+                      </div>
+                  `;
+                  return;
+              }
+
+              history.forEach(memo => {
+                  const date = new Date(memo.timestamp);
+                  const formattedDate = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+                  const card = document.createElement('div');
+                  card.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-2 group relative overflow-hidden';
+
+                  // テキスト部分は改行を反映
+                  const textDiv = document.createElement('div');
+                  textDiv.className = 'text-gray-700 whitespace-pre-wrap text-sm line-clamp-4';
+                  textDiv.textContent = memo.text;
+
+                  const footer = document.createElement('div');
+                  footer.className = 'flex justify-between items-center mt-1 pt-2 border-t border-gray-50';
+
+                  const timeSpan = document.createElement('span');
+                  timeSpan.className = 'text-xs text-gray-400 font-medium';
+                  timeSpan.textContent = formattedDate;
+
+                  const actionDiv = document.createElement('div');
+                  actionDiv.className = 'flex gap-2';
+
+                  // コピーボタン
+                  const btnCopy = document.createElement('button');
+                  btnCopy.className = 'w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 rounded-full hover:bg-gray-100 transition-colors';
+                  btnCopy.innerHTML = '<i class="ph ph-copy"></i>';
+                  btnCopy.onclick = () => {
+                      copyToClipboard(memo.text);
+                  };
+
+                  // 削除ボタン
+                  const btnDelete = document.createElement('button');
+                  btnDelete.className = 'w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors';
+                  btnDelete.innerHTML = '<i class="ph ph-trash"></i>';
+                  btnDelete.onclick = () => {
+                      openConfirmModal(memo.id);
+                  };
+
+                  actionDiv.appendChild(btnCopy);
+                  actionDiv.appendChild(btnDelete);
+
+                  footer.appendChild(timeSpan);
+                  footer.appendChild(actionDiv);
+
+                  card.appendChild(textDiv);
+                  card.appendChild(footer);
+
+                  historyList.appendChild(card);
+              });
+          }
+
+          // クリップボードにコピー
+          function copyToClipboard(text) {
+              // iframe内での制約を回避するための代替手段
+              const textArea = document.createElement("textarea");
+              textArea.value = text;
+              textArea.style.position = "fixed";
+              textArea.style.left = "-999999px";
+              textArea.style.top = "-999999px";
+              document.body.appendChild(textArea);
+              textArea.focus();
+              textArea.select();
+              try {
+                  document.execCommand('copy');
+                  showToast('コピーしました');
+              } catch (err) {
+                  console.error('コピーに失敗しました', err);
+              }
+              textArea.remove();
+          }
+
+          // トースト通知を表示
+          let toastTimeout;
+          function showToast(message) {
+              toast.textContent = message;
+              toast.style.opacity = '1';
+              clearTimeout(toastTimeout);
+              toastTimeout = setTimeout(() => {
+                  toast.style.opacity = '0';
+              }, 2000);
+          }
+
+          function openConfirmModal(id) {
+              memoToDeleteId = id;
+              confirmModal.classList.remove('pointer-events-none');
+              confirmBackdrop.style.opacity = '1';
+              confirmDialog.classList.remove('scale-95', 'opacity-0');
+              confirmDialog.classList.add('scale-100', 'opacity-100');
+          }
+
+          function closeConfirmModal() {
+              memoToDeleteId = null;
+              confirmBackdrop.style.opacity = '0';
+              confirmDialog.classList.remove('scale-100', 'opacity-100');
+              confirmDialog.classList.add('scale-95', 'opacity-0');
+              setTimeout(() => {
+                  confirmModal.classList.add('pointer-events-none');
+              }, 300);
+          }
+      });
+    </script>
+  </body>
+</html>
