@@ -152,6 +152,22 @@
       .btn-red:hover { background: var(--red-600); }
       #btn-history { flex: 1; }
       #btn-save-new { flex: 2; }
+      #btn-preview { flex: 1; }
+      .btn { white-space: nowrap; }
+      #btn-history, #btn-preview { padding-left: 0.375rem; padding-right: 0.375rem; }
+      #btn-save-new { padding-left: 0.5rem; padding-right: 0.5rem; }
+      .btn .when-edit, .btn .when-view { display: flex; align-items: center; gap: 0.375rem; }
+      /* 狭い画面（〜360px）ではフッターを少し詰めてはみ出しを防ぐ */
+      @media (max-width: 360px) {
+        footer { padding-left: 0.75rem; padding-right: 0.75rem; gap: 0.5rem; }
+        footer .btn { font-size: 0.875rem; gap: 0.375rem; }
+        footer .btn svg { width: 18px; height: 18px; }
+        #btn-history, #btn-preview { padding-left: 0.25rem; padding-right: 0.25rem; }
+        #btn-save-new { padding-left: 0.375rem; padding-right: 0.375rem; }
+      }
+      #btn-preview .when-view { display: none; }
+      #btn-preview.on .when-edit { display: none; }
+      #btn-preview.on .when-view { display: flex; }
 
       /* ===== 履歴パネル (Bottom Sheet) ===== */
       #history-panel {
@@ -262,21 +278,55 @@
         pointer-events: none;
       }
 
-      /* 行ごとの書式（# の数で変わる） */
+      /* 行ごとの書式（# の数で変わる）。サイズは親の文字サイズに対する割合 */
       .ln { white-space: pre-wrap; min-height: 1.6em; }
-      .ln.h1 { font-size: 1.25rem; font-weight: 700; line-height: 1.4; color: var(--gray-800); }  /* # タイトル（1行目は自動でこれ） */
-      .ln.h2 { font-size: 1.1rem; font-weight: 700; color: var(--gray-800); }                     /* ## サブタイトル */
-      .ln.h3 { font-size: 1rem; font-weight: 700; color: var(--gray-700); }                       /* ### サブサブタイトル */
-      .ln.h4 { font-size: 0.875rem; }                                                              /* #### 原文 */
-      .ln.h5 { font-size: 0.75rem; color: var(--gray-600); }                                       /* ##### ひとまわり小さい文 */
+      .ln.h1 { font-size: 1.4286em; font-weight: 700; line-height: 1.4; color: var(--gray-800); }  /* # タイトル（1行目は自動でこれ） */
+      .ln.h2 { font-size: 1.2571em; font-weight: 700; color: var(--gray-800); }                    /* ## サブタイトル */
+      .ln.h3 { font-size: 1.1429em; font-weight: 700; color: var(--gray-700); }                    /* ### サブサブタイトル */
+      .ln.h4 { font-size: 1em; }                                                                   /* #### 原文 */
+      .ln.h5 { font-size: 0.857em; color: var(--gray-600); }                                       /* ##### ひとまわり小さい文 */
 
       /* リンク */
-      .card-text a {
+      .card-text a, #preview a {
         color: #2563eb;
         text-decoration: underline;
         text-underline-offset: 2px;
       }
-      .card-text sup, .card-text sub { font-size: 0.7em; line-height: 0; }
+
+      /* 書体指定の解除・コードブロック（文字色や下線はインラインstyleで付ける） */
+      .plain { font-weight: 400; font-style: normal; text-decoration: none; background: none; }
+      .codeblock {
+        margin: 0.25rem 0;
+        padding: 0.625rem 0.75rem;
+        background: var(--gray-100);
+        border: 1px solid var(--gray-200);
+        border-radius: 0.5rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans Mono CJK JP', monospace;
+        font-size: 0.8125em;
+        line-height: 1.5;
+        color: var(--gray-800);
+        white-space: pre;
+        overflow-x: auto;
+        overflow-wrap: normal;
+        word-break: normal;
+      }
+
+      /* メイン画面でのプレビュー表示 */
+      #preview {
+        display: none;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 1.25rem;
+        font-size: 1.125rem;
+        line-height: 1.625;
+        color: var(--gray-800);
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+      #preview .hint { color: #94a3b8; }
+      #main-area.previewing #preview { display: block; }
+      #main-area.previewing #main-editor { display: none; }
       .card-footer {
         display: flex;
         justify-content: space-between;
@@ -403,12 +453,13 @@
       </header>
 
       <!-- メイン入力エリア -->
-      <main>
+      <main id="main-area">
         <div id="edit-banner">
           <span class="label"><span data-icon="edit" data-size="14"></span>履歴のメモを編集中</span>
           <button id="btn-cancel-edit">キャンセル</button>
         </div>
         <textarea id="main-editor" placeholder="ここにパパッとメモ..."></textarea>
+        <div id="preview"></div>
       </main>
 
       <!-- 下部アクションバー -->
@@ -416,6 +467,10 @@
         <button id="btn-history" class="btn btn-gray">
           <span data-icon="list" data-size="20"></span>
           履歴
+        </button>
+        <button id="btn-preview" class="btn btn-gray" aria-pressed="false">
+          <span class="when-edit"><span data-icon="eye" data-size="20"></span>表示</span>
+          <span class="when-view"><span data-icon="edit" data-size="20"></span>編集</span>
         </button>
         <button id="btn-save-new" class="btn btn-teal">
           <span data-icon="send" data-size="20"></span>
@@ -475,6 +530,7 @@
               trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
               download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
               upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+              eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
               edit: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
               file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
           };
@@ -501,6 +557,9 @@
           const btnImport = document.getElementById('btn-import');
           const btnExport = document.getElementById('btn-export');
           const importFile = document.getElementById('import-file');
+          const mainArea = document.getElementById('main-area');
+          const previewEl = document.getElementById('preview');
+          const btnPreview = document.getElementById('btn-preview');
 
           const confirmModal = document.getElementById('confirm-modal');
           const confirmBackdrop = document.getElementById('confirm-backdrop');
@@ -515,6 +574,7 @@
           let memoToDeleteId = null;
           let editingId = null;     // 編集中の履歴メモID（なければ null）
           let stashedDraft = '';    // 編集前に書いていた下書き（編集後に元へ戻す）
+          let previewing = false;   // メイン画面で整形表示中か
 
           // --- Initialize ---
           // 前回書きかけのメモがあれば復元
@@ -563,7 +623,7 @@
               if (editingId) {
                   updateMemo(editingId, text);
                   endEdit();
-                  editor.focus();
+                  setPreview(false);
                   showToast('更新しました');
                   return;
               }
@@ -572,7 +632,7 @@
 
               editor.value = '';
               localStorage.removeItem(STORAGE_KEY_CURRENT);
-              editor.focus();
+              setPreview(false); // 編集画面に戻ってフォーカス
 
               showToast('保存しました');
           });
@@ -580,7 +640,7 @@
           // 編集キャンセル
           btnCancelEdit.addEventListener('click', () => {
               endEdit();
-              editor.focus();
+              setPreview(false);
               showToast('編集をキャンセルしました');
           });
 
@@ -601,6 +661,14 @@
 
           btnCloseHistory.addEventListener('click', closeHistory);
           btnExport.addEventListener('click', exportMemos);
+
+          // 履歴に行かずに、今のメモを整形表示で確認
+          btnPreview.addEventListener('click', () => setPreview(!previewing));
+          previewEl.addEventListener('click', (e) => {
+              if (e.target.closest('a')) return;                          // リンクはそのまま開く
+              if (window.getSelection && window.getSelection().toString()) return; // 文字選択中は編集に戻らない
+              setPreview(false);                                          // タップで編集に戻る
+          });
           btnImport.addEventListener('click', () => importFile.click());
           importFile.addEventListener('change', () => {
               const file = importFile.files && importFile.files[0];
@@ -754,6 +822,7 @@
               editor.value = memo.text;
               localStorage.setItem(STORAGE_KEY_CURRENT, memo.text);
               updateEditUI();
+              if (previewing) setPreview(false);
               editor.setSelectionRange(editor.value.length, editor.value.length);
               closeHistory();
           }
@@ -770,6 +839,29 @@
               stashedDraft = '';
               localStorage.removeItem(STORAGE_KEY_EDIT);
               updateEditUI();
+          }
+
+          function setPreview(on) {
+              previewing = on;
+              mainArea.classList.toggle('previewing', on);
+              btnPreview.classList.toggle('on', on);
+              btnPreview.setAttribute('aria-pressed', String(on));
+              if (on) {
+                  previewEl.innerHTML = '';
+                  const text = editor.value.trim();
+                  if (text) {
+                      renderMemo(previewEl, text);
+                  } else {
+                      const hint = document.createElement('div');
+                      hint.className = 'hint';
+                      hint.textContent = 'まだ何も書かれていません';
+                      previewEl.appendChild(hint);
+                  }
+                  previewEl.scrollTop = 0;
+                  editor.blur();
+              } else {
+                  editor.focus();
+              }
           }
 
           function updateEditUI() {
@@ -869,64 +961,262 @@
 
           // --- メモの書式レンダリング ---
           // 行頭の # の数: 1=タイトル 2=サブタイトル 3=サブサブタイトル 4=原文 5=ひとまわり小さい文
-          // 1行目は # がなくてもタイトル。それ以外で # がない行は原文(4)
+          // メモ全体の1行目は # がなくてもタイトル。それ以外で # がない行は原文(4)
+          // ``` で囲んだ部分は（複数行でも）コードブロック
           function renderMemo(container, text) {
-              text.split('\n').forEach((line, i) => {
-                  let level;
-                  let body = line;
-                  const m = line.match(/^(#+)[ 　]?([\s\S]*)$/);
-                  if (m) {
-                      level = Math.min(m[1].length, 5);
-                      body = m[2];
-                  } else {
-                      level = i === 0 ? 1 : 4;
+              let first = true;
+              const parts = [];
+              const re = /```([\s\S]*?)```/g;
+              let last = 0;
+              let m;
+              while ((m = re.exec(text)) !== null) {
+                  parts.push({ type: 'text', value: text.slice(last, m.index) });
+                  parts.push({ type: 'code', value: m[1] });
+                  last = re.lastIndex;
+              }
+              parts.push({ type: 'text', value: text.slice(last) });
+
+              parts.forEach((part, idx) => {
+                  if (part.type === 'code') {
+                      const pre = document.createElement('pre');
+                      pre.className = 'codeblock';
+                      const code = document.createElement('code');
+                      code.textContent = part.value.replace(/^\r?\n/, '').replace(/\r?\n$/, '');
+                      pre.appendChild(code);
+                      container.appendChild(pre);
+                      first = false;
+                      return;
                   }
-                  const div = document.createElement('div');
-                  div.className = 'ln h' + level;
-                  appendWithLinks(div, body);
-                  container.appendChild(div);
+
+                  let value = part.value;
+                  // コードブロックの前後の改行1つは区切りなので落とす
+                  if (idx > 0) value = value.replace(/^\r?\n/, '');
+                  if (idx < parts.length - 1) value = value.replace(/\r?\n$/, '');
+                  if (value === '') return;
+
+                  value.split('\n').forEach(rawLine => {
+                      const line = rawLine.replace(/\r$/, '');
+                      let level = 4;
+                      let body = line;
+                      const hm = line.match(/^(#+)[ 　]?([\s\S]*)$/);
+                      if (hm) {
+                          level = Math.min(hm[1].length, 5);
+                          body = hm[2];
+                      } else if (first) {
+                          level = 1;
+                      }
+                      first = false;
+
+                      const div = document.createElement('div');
+                      div.className = 'ln h' + level;
+                      renderInline(div, body);
+                      container.appendChild(div);
+                  });
               });
           }
 
-          // URLを色付き＋下線のリンクにする（それ以外は上付き・下付きの処理へ）
-          function appendWithLinks(parent, text) {
-              const re = /https?:\/\/[A-Za-z0-9\-._~:\/?#\[\]@!$&()*+,;=%]+/g;
-              let last = 0;
-              let m;
-              while ((m = re.exec(text)) !== null) {
-                  let url = m[0];
-                  const trimmed = url.replace(/[.,;:!?)\]]+$/, ''); // 末尾の句読点は含めない
-                  if (trimmed.length !== url.length) {
-                      url = trimmed;
-                      re.lastIndex = m.index + url.length;
-                  }
-                  if (m.index > last) appendWithScripts(parent, text.slice(last, m.index));
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.target = '_blank';
-                  a.rel = 'noopener noreferrer';
-                  a.textContent = url;
-                  parent.appendChild(a);
-                  last = m.index + url.length;
-              }
-              if (last < text.length) appendWithScripts(parent, text.slice(last));
+          // 行の中の書式:
+          //   **太字**  *斜体*  ***太字斜体***  @@下線@@（@の内側にスペースなし）
+          //   ||あああ||  書体指定を消す（中の記号も解釈せずそのまま表示）
+          //   [RRR]文字[bbb]  先頭の記号=文字色(大文字) / 末尾の記号=下線色(小文字)
+          //   @[YYY]文字[000]@  マーカー（先頭は大文字の色、末尾の 000=黒文字 / FFF=白文字）
+          //   URL → 色付き＋下線のリンク
+          const PALETTE = {
+              R: '#ff0000', O: '#ff8000', Y: '#ffff00', G: '#00ff00',
+              C: '#00ffff', B: '#0000ff', M: '#ff00ff', '0': '#000000', F: '#ffffff'
+          };
+
+          // [先頭の記号][末尾の記号] から 文字色 と 下線色 を決める
+          // 大文字(RRR など)=文字色 / 小文字(rrr など)=下線色 / 000 は先頭なら文字色・末尾なら下線色
+          function resolveColorTags(openCode, closeCode) {
+              let textColor = null;
+              let ulColor = null;
+              [[openCode, true], [closeCode, false]].forEach(([code, isOpen]) => {
+                  const color = PALETTE[code[0].toUpperCase()];
+                  let role;
+                  if (code === '000') role = isOpen ? 'text' : 'ul';
+                  else role = code[0] === code[0].toUpperCase() ? 'text' : 'ul';
+                  if (role === 'text' && textColor === null) textColor = color;
+                  if (role === 'ul' && ulColor === null) ulColor = color;
+              });
+              return { text: textColor, ul: ulColor };
           }
 
-          // v' + 1文字 → 上付き、 ^. + 1文字 → 下付き
-          // （全角の ’ ＾ ． 。 も同じ扱い）
-          function appendWithScripts(parent, text) {
-              const re = /v['’‘](\S)|[\^＾][.．。](\S)/gu;
-              let last = 0;
+          // 色の終了記号を探す（マーカーの @[..] と [..]@ は除く）
+          function findColorTag(text, from) {
+              const re = /\[(RRR|rrr|OOO|ooo|YYY|yyy|GGG|ggg|CCC|ccc|BBB|bbb|MMM|mmm|000|FFF|fff)\]/g;
+              re.lastIndex = from;
               let m;
               while ((m = re.exec(text)) !== null) {
-                  if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
-                  const isSup = m[1] !== undefined;
-                  const el = document.createElement(isSup ? 'sup' : 'sub');
-                  el.textContent = isSup ? m[1] : m[2];
-                  parent.appendChild(el);
-                  last = re.lastIndex;
+                  const end = m.index + m[0].length;
+                  if (text[m.index - 1] === '@' && text[m.index - 2] !== '@') continue;
+                  if ((m[1] === '000' || m[1] === 'FFF') && text[end] === '@' && text[end + 1] !== '@') continue;
+                  return { index: m.index, code: m[1] };
               }
-              if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+              return null;
+          }
+
+          // ** * *** @@ の終了位置を探す（中身が空のもの・直前がスペースのものは除く）
+          function findCloser(text, from, token) {
+              let k = text.indexOf(token, from);
+              while (k !== -1) {
+                  let ok = k > from && !/\s/.test(text[k - 1]);
+                  if (ok && token === '*' && (text[k - 1] === '*' || text[k + 1] === '*')) ok = false;
+                  if (ok) return k;
+                  k = text.indexOf(token, k + 1);
+              }
+              return -1;
+          }
+
+          // 開始記号の直後がスペースでなく、あとで閉じられるときだけ開始とみなす
+          function canOpen(text, i, token) {
+              const next = text[i + token.length];
+              if (next === undefined || /\s/.test(next)) return false;
+              if (token === '*' && next === '*') return false;
+              return findCloser(text, i + token.length, token) !== -1;
+          }
+
+          function makeStyled(str, st, isLink) {
+              const css = [];
+              if (st.bold) css.push('font-weight:700');
+              if (st.italic) css.push('font-style:italic');
+              if (st.ul || st.cul) {
+                  css.push('text-decoration:underline', 'text-underline-offset:2px');
+                  if (st.cul) css.push('text-decoration-color:' + st.cul);
+              }
+              const color = st.ctext || st.mfg;
+              if (color) css.push('color:' + color);
+              if (st.mbg) {
+                  css.push('background-color:' + st.mbg, 'padding:0 0.2em', 'border-radius:0.2em',
+                           'box-decoration-break:clone', '-webkit-box-decoration-break:clone');
+              }
+              if (!css.length && !isLink) return document.createTextNode(str);
+              const el = document.createElement(isLink ? 'a' : 'span');
+              if (isLink) {
+                  el.href = str;
+                  el.target = '_blank';
+                  el.rel = 'noopener noreferrer';
+              }
+              el.style.cssText = css.join(';');
+              el.textContent = str;
+              return el;
+          }
+
+          // 1行ぶんの文字を左から読んで、書式の状態を切り替えながら要素にしていく
+          function renderInline(parent, text) {
+              const st = { bold: false, italic: false, ul: false, color: false, ctext: null, cul: null, mbg: null, mfg: null };
+              let buf = '';
+              const flush = () => {
+                  if (buf) parent.appendChild(makeStyled(buf, st, false));
+                  buf = '';
+              };
+              let i = 0;
+              while (i < text.length) {
+                  const rest = text.slice(i);
+                  let m;
+
+                  // ||あああ|| 書体指定を消す
+                  if (rest.startsWith('||')) {
+                      const j = text.indexOf('||', i + 2);
+                      if (j !== -1) {
+                          flush();
+                          if (j > i + 2) {
+                              const span = document.createElement('span');
+                              span.className = 'plain';
+                              span.textContent = text.slice(i + 2, j);
+                              parent.appendChild(span);
+                          }
+                          i = j + 2;
+                      } else {
+                          buf += '||';
+                          i += 2;
+                      }
+                      continue;
+                  }
+
+                  // @[YYY]文字[000]@ マーカー（開始）
+                  if ((m = rest.match(/^@\[(RRR|OOO|YYY|GGG|CCC|BBB|MMM|000|FFF)\]/))) {
+                      const closer = text.slice(i + m[0].length).match(/\[(000|FFF)\]@/);
+                      if (closer) {
+                          flush();
+                          st.mbg = PALETTE[m[1][0]];
+                          st.mfg = closer[1] === '000' ? '#000000' : '#ffffff';
+                      } else {
+                          buf += m[0];
+                      }
+                      i += m[0].length;
+                      continue;
+                  }
+                  // マーカー（終了）
+                  if (st.mbg && (m = rest.match(/^\[(000|FFF)\]@/))) {
+                      flush();
+                      st.mbg = null;
+                      st.mfg = null;
+                      i += m[0].length;
+                      continue;
+                  }
+
+                  // 開け閉めする記号: @@ *** ** *
+                  const token = rest.startsWith('@@') ? '@@'
+                      : rest.startsWith('***') ? '***'
+                      : rest.startsWith('**') ? '**'
+                      : rest.startsWith('*') ? '*' : null;
+                  if (token) {
+                      const keys = { '@@': ['ul'], '***': ['bold', 'italic'], '**': ['bold'], '*': ['italic'] }[token];
+                      if (keys.every(k => st[k])) {
+                          if (i > 0 && !/\s/.test(text[i - 1])) {
+                              flush();
+                              keys.forEach(k => { st[k] = false; });
+                              i += token.length;
+                              continue;
+                          }
+                      } else if (canOpen(text, i, token)) {
+                          flush();
+                          keys.forEach(k => { st[k] = true; });
+                          i += token.length;
+                          continue;
+                      }
+                      buf += token;
+                      i += token.length;
+                      continue;
+                  }
+
+                  // [RRR]文字[bbb] 色
+                  if ((m = rest.match(/^\[(RRR|rrr|OOO|ooo|YYY|yyy|GGG|ggg|CCC|ccc|BBB|bbb|MMM|mmm|000|FFF|fff)\]/))) {
+                      if (st.color) {
+                          flush();
+                          st.color = false;
+                          st.ctext = null;
+                          st.cul = null;
+                      } else {
+                          const closer = findColorTag(text, i + m[0].length);
+                          if (closer) {
+                              flush();
+                              const r = resolveColorTags(m[1], closer.code);
+                              st.color = true;
+                              st.ctext = r.text;
+                              st.cul = r.ul;
+                          } else {
+                              buf += m[0];
+                          }
+                      }
+                      i += m[0].length;
+                      continue;
+                  }
+
+                  // リンク
+                  if ((m = rest.match(/^https?:\/\/[A-Za-z0-9\-._~:\/?#!$&()+,;=%]+/))) {
+                      const url = m[0].replace(/[.,;:!?)]+$/, ''); // 末尾の句読点は含めない
+                      flush();
+                      parent.appendChild(makeStyled(url, st, true));
+                      i += url.length;
+                      continue;
+                  }
+
+                  buf += text[i];
+                  i++;
+              }
+              flush();
           }
 
           function copyToClipboard(text) {
