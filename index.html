@@ -157,22 +157,17 @@
       .btn-red:hover { background: var(--red-600); }
       #btn-history { flex: 1; }
       #btn-save-new { flex: 2; }
-      #btn-preview { flex: 1; }
       .btn { white-space: nowrap; }
-      #btn-history, #btn-preview { padding-left: 0.375rem; padding-right: 0.375rem; }
+      #btn-history { padding-left: 0.375rem; padding-right: 0.375rem; }
       #btn-save-new { padding-left: 0.5rem; padding-right: 0.5rem; }
-      .btn .when-edit, .btn .when-view { display: flex; align-items: center; gap: 0.375rem; }
       /* 狭い画面（〜360px）ではフッターを少し詰めてはみ出しを防ぐ */
       @media (max-width: 360px) {
         footer { padding-left: 0.75rem; padding-right: 0.75rem; gap: 0.5rem; }
         footer .btn { font-size: 0.875rem; gap: 0.375rem; }
         footer .btn svg { width: 18px; height: 18px; }
-        #btn-history, #btn-preview { padding-left: 0.25rem; padding-right: 0.25rem; }
+        #btn-history { padding-left: 0.25rem; padding-right: 0.25rem; }
         #btn-save-new { padding-left: 0.375rem; padding-right: 0.375rem; }
       }
-      #btn-preview .when-view { display: none; }
-      #btn-preview.on .when-edit { display: none; }
-      #btn-preview.on .when-view { display: flex; }
 
       /* ===== 履歴パネル (Bottom Sheet) ===== */
       #history-panel {
@@ -283,55 +278,14 @@
         pointer-events: none;
       }
 
-      /* 行ごとの書式（# の数で変わる）。サイズは親の文字サイズに対する割合 */
-      .ln { white-space: pre-wrap; min-height: 1.6em; }
-      .ln.h1 { font-size: 1.4286em; font-weight: 700; line-height: 1.4; color: var(--gray-800); }  /* # タイトル（1行目は自動でこれ） */
-      .ln.h2 { font-size: 1.2571em; font-weight: 700; color: var(--gray-800); }                    /* ## サブタイトル */
-      .ln.h3 { font-size: 1.1429em; font-weight: 700; color: var(--gray-700); }                    /* ### サブサブタイトル */
-      .ln.h4 { font-size: 1em; }                                                                   /* #### 原文 */
-      .ln.h5 { font-size: 0.857em; color: var(--gray-600); }                                       /* ##### ひとまわり小さい文 */
-
-      /* リンク */
-      .card-text a, #preview a {
+      /* Lite: 1行目はタイトル、リンクは色付き＋下線。それ以外は書いたまま表示 */
+      .memo-title { font-size: 1.25em; font-weight: 700; line-height: 1.4; color: var(--gray-800); white-space: pre-wrap; }
+      .memo-line { white-space: pre-wrap; min-height: 1.6em; }
+      .card-text a {
         color: #2563eb;
         text-decoration: underline;
         text-underline-offset: 2px;
       }
-
-      /* 書体指定の解除・コードブロック（文字色や下線はインラインstyleで付ける） */
-      .plain { font-weight: 400; font-style: normal; text-decoration: none; background: none; }
-      .codeblock {
-        margin: 0.25rem 0;
-        padding: 0.625rem 0.75rem;
-        background: var(--gray-100);
-        border: 1px solid var(--gray-200);
-        border-radius: 0.5rem;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans Mono CJK JP', monospace;
-        font-size: 0.8125em;
-        line-height: 1.5;
-        color: var(--gray-800);
-        white-space: pre;
-        overflow-x: auto;
-        overflow-wrap: normal;
-        word-break: normal;
-      }
-
-      /* メイン画面でのプレビュー表示 */
-      #preview {
-        display: none;
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        padding: 1.25rem;
-        font-size: 1.125rem;
-        line-height: 1.625;
-        color: var(--gray-800);
-        word-break: break-word;
-        overflow-wrap: anywhere;
-      }
-      #preview .hint { color: #94a3b8; }
-      #main-area.previewing #preview { display: block; }
-      #main-area.previewing #main-editor { display: none; }
       .card-footer {
         display: flex;
         justify-content: space-between;
@@ -381,8 +335,20 @@
         font-weight: 500;
       }
       #btn-cancel-edit:active { transform: scale(0.95); }
-      .icon-btn.del { background: var(--red-50); color: var(--red-500); }
-      .icon-btn.del:hover { background: var(--red-100); }
+      .card-left { display: flex; align-items: center; gap: 0.5rem; }
+      /* 削除は編集・コピーと反対の左端に置き、普段は目立たない色にする */
+      .icon-btn.del { width: 1.75rem; height: 1.75rem; background: transparent; color: var(--gray-400); }
+      .icon-btn.del:hover, .icon-btn.del:active { background: var(--red-50); color: var(--red-500); }
+      #confirm-excerpt {
+        background: var(--gray-50);
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--gray-700);
+        word-break: break-all;
+      }
 
       /* ===== トースト ===== */
       #toast {
@@ -453,89 +419,6 @@
       #info-body p, #info-body li { line-height: 1.7; }
       #info-body ul { padding-left: 1.1rem; }
       #info-body .note { font-size: 0.8125rem; color: var(--gray-600); margin: 0.25rem 0; }
-      .ex { padding: 0.5rem 0; border-bottom: 1px solid var(--gray-100); display: flex; flex-direction: column; gap: 0.25rem; }
-      .ex code.src {
-        align-self: flex-start;
-        max-width: 100%;
-        padding: 0.125rem 0.375rem;
-        background: var(--gray-100);
-        border-radius: 0.25rem;
-        color: var(--gray-600);
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans Mono CJK JP', monospace;
-        font-size: 0.75rem;
-        white-space: pre-wrap;
-        word-break: break-all;
-      }
-      .ex .out { font-size: 0.9375rem; }
-      .ex .desc { font-size: 0.75rem; color: var(--gray-400); }
-      .chips { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.5rem; }
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        padding: 0.25rem 0.5rem;
-        border: 1px solid var(--gray-200);
-        border-radius: 9999px;
-        font-size: 0.75rem;
-      }
-      .chip i { width: 0.875rem; height: 0.875rem; border-radius: 9999px; border: 1px solid rgba(0, 0, 0, 0.25); display: inline-block; }
-
-      /* ===== 日時入力モーダル (=tim) ===== */
-      #ts-modal {
-        position: absolute;
-        inset: 0;
-        z-index: 90;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-      }
-      #ts-modal.open { pointer-events: auto; }
-      #ts-backdrop {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.4);
-        opacity: 0;
-        transition: opacity 0.3s;
-      }
-      #ts-modal.open #ts-backdrop { opacity: 1; }
-      #ts-dialog {
-        position: relative;
-        z-index: 10;
-        width: 88%;
-        max-width: 24rem;
-        background: #fff;
-        border-radius: 1rem;
-        padding: 1.25rem;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        transform: scale(0.95);
-        opacity: 0;
-        transition: all 0.3s;
-      }
-      #ts-modal.open #ts-dialog { transform: scale(1); opacity: 1; }
-      #ts-dialog h3 { font-size: 1.125rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.75rem; }
-      .ts-opt {
-        display: flex;
-        align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem 0.75rem;
-        border: 1px solid var(--gray-200);
-        border-radius: 0.75rem;
-        margin-bottom: 0.5rem;
-        font-size: 0.9375rem;
-        color: var(--gray-700);
-        cursor: pointer;
-      }
-      .ts-opt:has(input:checked) { border-color: var(--teal-500); background: #f0fdfa; }
-      .ts-opt input { accent-color: var(--teal-500); width: 1.125rem; height: 1.125rem; flex-shrink: 0; }
-      .ts-opt .ts-name { font-size: 0.75rem; color: var(--gray-400); margin-left: auto; white-space: nowrap; }
-      .ts-time-box { margin: 0.75rem 0 0.25rem; padding-top: 0.75rem; border-top: 1px solid var(--gray-100); }
-      #ts-time-opts { display: flex; gap: 0.5rem; margin: 0.5rem 0 0 1.5rem; }
-      #ts-time-opts .ts-opt { flex: 1; margin-bottom: 0; justify-content: center; }
-      #ts-time-opts.disabled { opacity: 0.4; pointer-events: none; }
-      #ts-dialog .row { display: flex; gap: 0.75rem; margin-top: 1rem; }
-      #ts-dialog .row .btn { flex: 1; padding: 0.625rem 1rem; }
-
       /* ===== 削除確認モーダル ===== */
       #confirm-modal {
         position: absolute;
@@ -580,8 +463,8 @@
       <!-- ヘッダー -->
       <header>
         <h1>
-          M<span class="accent">ε</span>mol
-          <span class="ver">- v0.02</span>
+          M<span class="accent">ε</span>mol Lite
+          <span class="ver">- v0.03</span>
         </h1>
         <div class="header-right">
           <div id="save-indicator">
@@ -595,13 +478,12 @@
       </header>
 
       <!-- メイン入力エリア -->
-      <main id="main-area">
+      <main>
         <div id="edit-banner">
           <span class="label"><span data-icon="edit" data-size="14"></span>履歴のメモを編集中</span>
           <button id="btn-cancel-edit">キャンセル</button>
         </div>
         <textarea id="main-editor" placeholder="ここにパパッとメモ..."></textarea>
-        <div id="preview"></div>
       </main>
 
       <!-- 下部アクションバー -->
@@ -609,10 +491,6 @@
         <button id="btn-history" class="btn btn-gray">
           <span data-icon="list" data-size="20"></span>
           履歴
-        </button>
-        <button id="btn-preview" class="btn btn-gray" aria-pressed="false">
-          <span class="when-edit"><span data-icon="eye" data-size="20"></span>表示</span>
-          <span class="when-view"><span data-icon="edit" data-size="20"></span>編集</span>
         </button>
         <button id="btn-save-new" class="btn btn-teal">
           <span data-icon="send" data-size="20"></span>
@@ -646,30 +524,6 @@
       <!-- トースト通知 -->
       <div id="toast">コピーしました</div>
 
-      <!-- 日時入力 (=tim) -->
-      <div id="ts-modal">
-        <div id="ts-backdrop"></div>
-        <div id="ts-dialog" role="dialog" aria-label="日時を入力">
-          <h3>日時を入力</h3>
-          <label class="ts-opt"><input type="radio" name="ts-fmt" value="seireki"><span class="ts-ex"></span><span class="ts-name">西暦</span></label>
-          <label class="ts-opt"><input type="radio" name="ts-fmt" value="reiwa"><span class="ts-ex"></span><span class="ts-name">令和</span></label>
-          <label class="ts-opt"><input type="radio" name="ts-fmt" value="short"><span class="ts-ex"></span><span class="ts-name">年を2桁</span></label>
-          <div class="ts-time-box">
-            <label class="ts-check" style="display:flex;align-items:center;gap:0.625rem;font-size:0.9375rem;color:var(--gray-700);cursor:pointer;">
-              <input type="checkbox" id="ts-time" style="accent-color:var(--teal-500);width:1.125rem;height:1.125rem;"> 時刻もつける
-            </label>
-            <div id="ts-time-opts" class="disabled">
-              <label class="ts-opt"><input type="radio" name="ts-unit" value="min">分まで</label>
-              <label class="ts-opt"><input type="radio" name="ts-unit" value="sec">秒まで</label>
-            </div>
-          </div>
-          <div class="row">
-            <button id="btn-ts-cancel" class="btn btn-gray">キャンセル</button>
-            <button id="btn-ts-ok" class="btn btn-teal">入力</button>
-          </div>
-        </div>
-      </div>
-
       <!-- 使い方 -->
       <div id="info-modal">
         <div id="info-backdrop"></div>
@@ -689,6 +543,7 @@
         <div id="confirm-backdrop"></div>
         <div id="confirm-dialog">
           <h3>メモを削除しますか？</h3>
+          <div id="confirm-excerpt"></div>
           <p>この操作は取り消せません。</p>
           <div class="row">
             <button id="btn-cancel-delete" class="btn btn-gray">キャンセル</button>
@@ -743,9 +598,6 @@
           const btnImport = document.getElementById('btn-import');
           const btnExport = document.getElementById('btn-export');
           const importFile = document.getElementById('import-file');
-          const mainArea = document.getElementById('main-area');
-          const previewEl = document.getElementById('preview');
-          const btnPreview = document.getElementById('btn-preview');
 
           const infoModal = document.getElementById('info-modal');
           const infoBody = document.getElementById('info-body');
@@ -762,7 +614,6 @@
           let memoToDeleteId = null;
           let editingId = null;     // 編集中の履歴メモID（なければ null）
           let stashedDraft = '';    // 編集前に書いていた下書き（編集後に元へ戻す）
-          let previewing = false;   // メイン画面で整形表示中か
 
           // --- Initialize ---
           // 前回書きかけのメモがあれば復元
@@ -811,7 +662,7 @@
               if (editingId) {
                   updateMemo(editingId, text);
                   endEdit();
-                  setPreview(false);
+                  editor.focus();
                   showToast('更新しました');
                   return;
               }
@@ -820,7 +671,7 @@
 
               editor.value = '';
               localStorage.removeItem(STORAGE_KEY_CURRENT);
-              setPreview(false); // 編集画面に戻ってフォーカス
+              editor.focus();
 
               showToast('保存しました');
           });
@@ -828,7 +679,7 @@
           // 編集キャンセル
           btnCancelEdit.addEventListener('click', () => {
               endEdit();
-              setPreview(false);
+              editor.focus();
               showToast('編集をキャンセルしました');
           });
 
@@ -850,30 +701,14 @@
           btnCloseHistory.addEventListener('click', closeHistory);
           btnExport.addEventListener('click', exportMemos);
 
-          // 履歴に行かずに、今のメモを整形表示で確認
-          btnPreview.addEventListener('click', () => setPreview(!previewing));
-          previewEl.addEventListener('click', (e) => {
-              if (e.target.closest('a')) return;                          // リンクはそのまま開く
-              if (window.getSelection && window.getSelection().toString()) return; // 文字選択中は編集に戻らない
-              setPreview(false);                                          // タップで編集に戻る
-          });
           btnImport.addEventListener('click', () => importFile.click());
           document.getElementById('btn-info').addEventListener('click', openInfo);
           document.getElementById('btn-close-info').addEventListener('click', closeInfo);
           document.getElementById('info-backdrop').addEventListener('click', closeInfo);
           document.addEventListener('keydown', (e) => {
               if (e.key === 'Escape' && infoModal.classList.contains('open')) closeInfo();
-              if (e.key === 'Escape' && document.getElementById('ts-modal').classList.contains('open')) closeTs(false);
           });
 
-          // =tim と打つと日時入力モーダルを開く（日本語入力の変換中は確定後に判定）
-          editor.addEventListener('input', (e) => { if (!e.isComposing) checkTimTrigger(); });
-          editor.addEventListener('compositionend', () => setTimeout(checkTimTrigger, 0));
-          document.getElementById('ts-backdrop').addEventListener('click', () => closeTs(false));
-          document.getElementById('btn-ts-cancel').addEventListener('click', () => closeTs(false));
-          document.getElementById('btn-ts-ok').addEventListener('click', () => closeTs(true));
-          document.getElementById('ts-time').addEventListener('change', updateTsUI);
-          document.querySelectorAll('input[name="ts-fmt"], input[name="ts-unit"]').forEach(r => r.addEventListener('change', updateTsUI));
           importFile.addEventListener('change', () => {
               const file = importFile.files && importFile.files[0];
               if (file) importMemos(file);
@@ -1026,7 +861,6 @@
               editor.value = memo.text;
               localStorage.setItem(STORAGE_KEY_CURRENT, memo.text);
               updateEditUI();
-              if (previewing) setPreview(false);
               editor.setSelectionRange(editor.value.length, editor.value.length);
               closeHistory();
           }
@@ -1043,29 +877,6 @@
               stashedDraft = '';
               localStorage.removeItem(STORAGE_KEY_EDIT);
               updateEditUI();
-          }
-
-          function setPreview(on) {
-              previewing = on;
-              mainArea.classList.toggle('previewing', on);
-              btnPreview.classList.toggle('on', on);
-              btnPreview.setAttribute('aria-pressed', String(on));
-              if (on) {
-                  previewEl.innerHTML = '';
-                  const text = editor.value.trim();
-                  if (text) {
-                      renderMemo(previewEl, text);
-                  } else {
-                      const hint = document.createElement('div');
-                      hint.className = 'hint';
-                      hint.textContent = 'まだ何も書かれていません';
-                      previewEl.appendChild(hint);
-                  }
-                  previewEl.scrollTop = 0;
-                  editor.blur();
-              } else {
-                  editor.focus();
-              }
           }
 
           function updateEditUI() {
@@ -1112,7 +923,7 @@
 
                   const textDiv = document.createElement('div');
                   textDiv.className = 'card-text collapsed';
-                  renderMemo(textDiv, memo.text);
+                  renderLite(textDiv, memo.text);
                   // 長いメモはタップで全文表示／折りたたみ（リンクのタップは除く）
                   textDiv.addEventListener('click', (e) => {
                       if (e.target.closest('a')) return;
@@ -1149,8 +960,13 @@
 
                   actionDiv.appendChild(btnEdit);
                   actionDiv.appendChild(btnCopy);
-                  actionDiv.appendChild(btnDelete);
-                  footer.appendChild(timeSpan);
+
+                  // 左: 削除と日時 / 右: 編集とコピー（誤タップしにくいように離す）
+                  const leftDiv = document.createElement('div');
+                  leftDiv.className = 'card-left';
+                  leftDiv.appendChild(btnDelete);
+                  leftDiv.appendChild(timeSpan);
+                  footer.appendChild(leftDiv);
                   footer.appendChild(actionDiv);
                   card.appendChild(textDiv);
                   card.appendChild(footer);
@@ -1163,353 +979,34 @@
               });
           }
 
-          // --- メモの書式レンダリング ---
-          // 行頭の # の数: 1=タイトル 2=サブタイトル 3=サブサブタイトル 4=原文 5=ひとまわり小さい文
-          // メモ全体の1行目は # がなくてもタイトル。それ以外で # がない行は原文(4)
-          // ``` で囲んだ部分は（複数行でも）コードブロック
-          function renderMemo(container, text) {
-              let first = true;
-              const parts = [];
-              const re = /```([\s\S]*?)```/g;
+          // --- メモの表示（Lite） ---
+          // 1行目をタイトルとして大きく表示し、URLは色付き＋下線のリンクにする。ほかは書いたまま。
+          function renderLite(container, text) {
+              text.split('\n').forEach((line, i) => {
+                  const div = document.createElement('div');
+                  div.className = i === 0 ? 'memo-title' : 'memo-line';
+                  appendWithLinks(div, line);
+                  container.appendChild(div);
+              });
+          }
+
+          function appendWithLinks(parent, text) {
+              const re = /https?:\/\/[A-Za-z0-9\-._~:\/?#!$&()+,;=%@]+/g;
               let last = 0;
               let m;
               while ((m = re.exec(text)) !== null) {
-                  parts.push({ type: 'text', value: text.slice(last, m.index) });
-                  parts.push({ type: 'code', value: m[1] });
-                  last = re.lastIndex;
+                  const url = m[0].replace(/[.,;:!?)]+$/, ''); // 末尾の句読点は含めない
+                  re.lastIndex = m.index + url.length;
+                  if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.target = '_blank';
+                  a.rel = 'noopener noreferrer';
+                  a.textContent = url;
+                  parent.appendChild(a);
+                  last = m.index + url.length;
               }
-              parts.push({ type: 'text', value: text.slice(last) });
-
-              parts.forEach((part, idx) => {
-                  if (part.type === 'code') {
-                      const pre = document.createElement('pre');
-                      pre.className = 'codeblock';
-                      const code = document.createElement('code');
-                      code.textContent = part.value.replace(/^\r?\n/, '').replace(/\r?\n$/, '');
-                      pre.appendChild(code);
-                      container.appendChild(pre);
-                      first = false;
-                      return;
-                  }
-
-                  let value = part.value;
-                  // コードブロックの前後の改行1つは区切りなので落とす
-                  if (idx > 0) value = value.replace(/^\r?\n/, '');
-                  if (idx < parts.length - 1) value = value.replace(/\r?\n$/, '');
-                  if (value === '') return;
-
-                  value.split('\n').forEach(rawLine => {
-                      const line = rawLine.replace(/\r$/, '');
-                      let level = 4;
-                      let body = line;
-                      const hm = line.match(/^(#+)[ 　]?([\s\S]*)$/);
-                      if (hm) {
-                          level = Math.min(hm[1].length, 5);
-                          body = hm[2];
-                      } else if (first) {
-                          level = 1;
-                      }
-                      first = false;
-
-                      const div = document.createElement('div');
-                      div.className = 'ln h' + level;
-                      renderInline(div, body);
-                      container.appendChild(div);
-                  });
-              });
-          }
-
-          // 行の中の書式:
-          //   **太字**  *斜体*  ***太字斜体***  @@下線@@（@の内側にスペースなし）
-          //   ||あああ||  書体指定を消す（中の記号も解釈せずそのまま表示）
-          //   [RRR]文字[bbb]  先頭の記号=文字色(大文字) / 末尾の記号=下線色(小文字)
-          //   @[YYY]文字[000]@  マーカー（先頭は大文字の色、末尾の 000=黒文字 / FFF=白文字）
-          //   URL → 色付き＋下線のリンク
-          const PALETTE = {
-              R: '#ff0000', O: '#ff8000', Y: '#ffff00', G: '#00ff00',
-              C: '#00ffff', B: '#0000ff', M: '#ff00ff', '0': '#000000', F: '#ffffff'
-          };
-
-          // [先頭の記号][末尾の記号] から 文字色 と 下線色 を決める
-          // 大文字(RRR など)=文字色 / 小文字(rrr など)=下線色 / 000 は先頭なら文字色・末尾なら下線色
-          function resolveColorTags(openCode, closeCode) {
-              let textColor = null;
-              let ulColor = null;
-              [[openCode, true], [closeCode, false]].forEach(([code, isOpen]) => {
-                  const color = PALETTE[code[0].toUpperCase()];
-                  let role;
-                  if (code === '000') role = isOpen ? 'text' : 'ul';
-                  else role = code[0] === code[0].toUpperCase() ? 'text' : 'ul';
-                  if (role === 'text' && textColor === null) textColor = color;
-                  if (role === 'ul' && ulColor === null) ulColor = color;
-              });
-              return { text: textColor, ul: ulColor };
-          }
-
-          // 色の終了記号を探す（マーカーの @[..] と [..]@ は除く）
-          function findColorTag(text, from) {
-              const re = /\[(RRR|rrr|OOO|ooo|YYY|yyy|GGG|ggg|CCC|ccc|BBB|bbb|MMM|mmm|000|FFF|fff)\]/g;
-              re.lastIndex = from;
-              let m;
-              while ((m = re.exec(text)) !== null) {
-                  const end = m.index + m[0].length;
-                  if (text[m.index - 1] === '@' && text[m.index - 2] !== '@') continue;
-                  if ((m[1] === '000' || m[1] === 'FFF') && text[end] === '@' && text[end + 1] !== '@') continue;
-                  return { index: m.index, code: m[1] };
-              }
-              return null;
-          }
-
-          // ** * *** @@ の終了位置を探す（中身が空のもの・直前がスペースのものは除く）
-          function findCloser(text, from, token) {
-              let k = text.indexOf(token, from);
-              while (k !== -1) {
-                  let ok = k > from && !/\s/.test(text[k - 1]);
-                  if (ok && token === '*' && (text[k - 1] === '*' || text[k + 1] === '*')) ok = false;
-                  if (ok) return k;
-                  k = text.indexOf(token, k + 1);
-              }
-              return -1;
-          }
-
-          // 開始記号の直後がスペースでなく、あとで閉じられるときだけ開始とみなす
-          function canOpen(text, i, token) {
-              const next = text[i + token.length];
-              if (next === undefined || /\s/.test(next)) return false;
-              if (token === '*' && next === '*') return false;
-              return findCloser(text, i + token.length, token) !== -1;
-          }
-
-          function makeStyled(str, st, isLink) {
-              const css = [];
-              if (st.bold) css.push('font-weight:700');
-              if (st.italic) css.push('font-style:italic');
-              if (st.ul || st.cul) {
-                  css.push('text-decoration:underline', 'text-underline-offset:2px');
-                  if (st.cul) css.push('text-decoration-color:' + st.cul);
-              }
-              const color = st.ctext || st.mfg;
-              if (color) css.push('color:' + color);
-              if (st.mbg) {
-                  css.push('background-color:' + st.mbg, 'padding:0 0.2em', 'border-radius:0.2em',
-                           'box-decoration-break:clone', '-webkit-box-decoration-break:clone');
-              }
-              if (!css.length && !isLink) return document.createTextNode(str);
-              const el = document.createElement(isLink ? 'a' : 'span');
-              if (isLink) {
-                  el.href = str;
-                  el.target = '_blank';
-                  el.rel = 'noopener noreferrer';
-              }
-              el.style.cssText = css.join(';');
-              el.textContent = str;
-              return el;
-          }
-
-          // 1行ぶんの文字を左から読んで、書式の状態を切り替えながら要素にしていく
-          function renderInline(parent, text) {
-              const st = { bold: false, italic: false, ul: false, color: false, ctext: null, cul: null, mbg: null, mfg: null };
-              let buf = '';
-              const flush = () => {
-                  if (buf) parent.appendChild(makeStyled(buf, st, false));
-                  buf = '';
-              };
-              let i = 0;
-              while (i < text.length) {
-                  const rest = text.slice(i);
-                  let m;
-
-                  // ||あああ|| 書体指定を消す
-                  if (rest.startsWith('||')) {
-                      const j = text.indexOf('||', i + 2);
-                      if (j !== -1) {
-                          flush();
-                          if (j > i + 2) {
-                              const span = document.createElement('span');
-                              span.className = 'plain';
-                              span.textContent = text.slice(i + 2, j);
-                              parent.appendChild(span);
-                          }
-                          i = j + 2;
-                      } else {
-                          buf += '||';
-                          i += 2;
-                      }
-                      continue;
-                  }
-
-                  // @[YYY]文字[000]@ マーカー（開始）
-                  if ((m = rest.match(/^@\[(RRR|OOO|YYY|GGG|CCC|BBB|MMM|000|FFF)\]/))) {
-                      const closer = text.slice(i + m[0].length).match(/\[(000|FFF)\]@/);
-                      if (closer) {
-                          flush();
-                          st.mbg = PALETTE[m[1][0]];
-                          st.mfg = closer[1] === '000' ? '#000000' : '#ffffff';
-                      } else {
-                          buf += m[0];
-                      }
-                      i += m[0].length;
-                      continue;
-                  }
-                  // マーカー（終了）
-                  if (st.mbg && (m = rest.match(/^\[(000|FFF)\]@/))) {
-                      flush();
-                      st.mbg = null;
-                      st.mfg = null;
-                      i += m[0].length;
-                      continue;
-                  }
-
-                  // 開け閉めする記号: @@ *** ** *
-                  const token = rest.startsWith('@@') ? '@@'
-                      : rest.startsWith('***') ? '***'
-                      : rest.startsWith('**') ? '**'
-                      : rest.startsWith('*') ? '*' : null;
-                  if (token) {
-                      const keys = { '@@': ['ul'], '***': ['bold', 'italic'], '**': ['bold'], '*': ['italic'] }[token];
-                      if (keys.every(k => st[k])) {
-                          if (i > 0 && !/\s/.test(text[i - 1])) {
-                              flush();
-                              keys.forEach(k => { st[k] = false; });
-                              i += token.length;
-                              continue;
-                          }
-                      } else if (canOpen(text, i, token)) {
-                          flush();
-                          keys.forEach(k => { st[k] = true; });
-                          i += token.length;
-                          continue;
-                      }
-                      buf += token;
-                      i += token.length;
-                      continue;
-                  }
-
-                  // [RRR]文字[bbb] 色
-                  if ((m = rest.match(/^\[(RRR|rrr|OOO|ooo|YYY|yyy|GGG|ggg|CCC|ccc|BBB|bbb|MMM|mmm|000|FFF|fff)\]/))) {
-                      if (st.color) {
-                          flush();
-                          st.color = false;
-                          st.ctext = null;
-                          st.cul = null;
-                      } else {
-                          const closer = findColorTag(text, i + m[0].length);
-                          if (closer) {
-                              flush();
-                              const r = resolveColorTags(m[1], closer.code);
-                              st.color = true;
-                              st.ctext = r.text;
-                              st.cul = r.ul;
-                          } else {
-                              buf += m[0];
-                          }
-                      }
-                      i += m[0].length;
-                      continue;
-                  }
-
-                  // リンク
-                  if ((m = rest.match(/^https?:\/\/[A-Za-z0-9\-._~:\/?#!$&()+,;=%]+/))) {
-                      const url = m[0].replace(/[.,;:!?)]+$/, ''); // 末尾の句読点は含めない
-                      flush();
-                      parent.appendChild(makeStyled(url, st, true));
-                      i += url.length;
-                      continue;
-                  }
-
-                  buf += text[i];
-                  i++;
-              }
-              flush();
-          }
-
-          // --- =tim で日時を入力 ---
-          const TS_KEY = 'memol_timestamp_prefs';
-          let tsTriggerEnd = null; // 「=tim」の末尾の位置
-
-          function loadTsPrefs() {
-              const def = { fmt: 'seireki', time: false, unit: 'min' };
-              try {
-                  return Object.assign(def, JSON.parse(localStorage.getItem(TS_KEY) || '{}'));
-              } catch (e) {
-                  return def;
-              }
-          }
-
-          // fmt: seireki=2026/10/06  reiwa=R8/10/06  short='26/10/06
-          function formatTimestamp(d, fmt, withTime, unit) {
-              const p2 = n => String(n).padStart(2, '0');
-              const y = d.getFullYear();
-              const ys = fmt === 'reiwa' ? 'R' + (y - 2018)
-                  : fmt === 'short' ? "'" + p2(y % 100)
-                  : String(y);
-              let out = `${ys}/${p2(d.getMonth() + 1)}/${p2(d.getDate())}`;
-              if (withTime) {
-                  out += ` ${p2(d.getHours())}:${p2(d.getMinutes())}`;
-                  if (unit === 'sec') out += ':' + p2(d.getSeconds());
-              }
-              return out;
-          }
-
-          function readTsForm() {
-              const fmt = document.querySelector('input[name="ts-fmt"]:checked');
-              const unit = document.querySelector('input[name="ts-unit"]:checked');
-              return {
-                  fmt: fmt ? fmt.value : 'seireki',
-                  time: document.getElementById('ts-time').checked,
-                  unit: unit ? unit.value : 'min'
-              };
-          }
-
-          // 選択肢の見本を、今の日時と今の設定で表示し直す
-          function updateTsUI() {
-              const f = readTsForm();
-              document.getElementById('ts-time-opts').classList.toggle('disabled', !f.time);
-              const now = new Date();
-              document.querySelectorAll('input[name="ts-fmt"]').forEach(r => {
-                  r.parentElement.querySelector('.ts-ex').textContent = formatTimestamp(now, r.value, f.time, f.unit);
-              });
-          }
-
-          function checkTimTrigger() {
-              if (editor.selectionStart !== editor.selectionEnd) return;
-              const pos = editor.selectionStart;
-              if (pos < 4) return;
-              if (!/^[=＝][tｔTＴ][iｉIＩ][mｍMＭ]$/.test(editor.value.slice(pos - 4, pos))) return;
-              openTs(pos);
-          }
-
-          function openTs(pos) {
-              tsTriggerEnd = pos;
-              const prefs = loadTsPrefs();
-              document.querySelector(`input[name="ts-fmt"][value="${prefs.fmt}"]`).checked = true;
-              document.querySelector(`input[name="ts-unit"][value="${prefs.unit}"]`).checked = true;
-              document.getElementById('ts-time').checked = !!prefs.time;
-              updateTsUI();
-              editor.blur();
-              document.getElementById('ts-modal').classList.add('open');
-          }
-
-          function closeTs(insert) {
-              const end = tsTriggerEnd;
-              document.getElementById('ts-modal').classList.remove('open');
-              tsTriggerEnd = null;
-              if (end === null) return;
-              let caret = end;
-              if (insert) {
-                  const f = readTsForm();
-                  localStorage.setItem(TS_KEY, JSON.stringify(f));
-                  const ts = formatTimestamp(new Date(), f.fmt, f.time, f.unit);
-                  const v = editor.value;
-                  const start = end - 4;
-                  if (start >= 0 && /^[=＝]/.test(v[start])) {
-                      editor.value = v.slice(0, start) + ts + v.slice(end);
-                      caret = start + ts.length;
-                      editor.dispatchEvent(new Event('input')); // 自動保存
-                  }
-              }
-              editor.focus();
-              editor.setSelectionRange(caret, caret);
+              if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
           }
 
           // --- 使い方 (iボタン) ---
@@ -1544,103 +1041,35 @@
                   });
                   infoBody.appendChild(ul);
               };
-              // 書いた記号(src)と、その見え方(out)を1組で並べる
-              const example = (src, opts = {}) => {
-                  const box = document.createElement('div');
-                  box.className = 'ex';
-                  const code = document.createElement('code');
-                  code.className = 'src';
-                  code.textContent = src;
-                  const out = document.createElement('div');
-                  out.className = 'out card-text';
-                  if (opts.code) {
-                      const pre = document.createElement('pre');
-                      pre.className = 'codeblock';
-                      pre.textContent = opts.code;
-                      out.appendChild(pre);
-                  } else {
-                      const line = document.createElement('div');
-                      line.className = 'ln h' + (opts.level || 4);
-                      renderInline(line, opts.body !== undefined ? opts.body : src);
-                      out.appendChild(line);
-                  }
-                  box.appendChild(code);
-                  box.appendChild(out);
-                  if (opts.desc) {
-                      const d = document.createElement('div');
-                      d.className = 'desc';
-                      d.textContent = opts.desc;
-                      box.appendChild(d);
-                  }
-                  infoBody.appendChild(box);
-              };
 
-              section('基本');
+              section('書く');
               list([
-                  '入力すると自動で保存されます（書きかけも残ります）。',
+                  '開いてすぐ書けます。入力すると自動で保存されます（書きかけも残ります）。',
                   '「保存して次へ」で履歴に追加して、入力欄を空にします。',
-                  '「表示」で書式を反映した見た目を確認できます。「編集」で入力に戻ります。',
-                  '「履歴」では、鉛筆で編集、コピー、ごみ箱で削除ができます。長いメモはタップで開閉します。',
-                  '履歴の右上の矢印で、全メモを .memol ファイルに書き出し（下向き）／読み込み（上向き）できます。'
+                  '1行目は、履歴ではタイトルとして大きく表示されます。',
+                  'URL（http:// や https:// で始まる文字）は、色付き＋下線のリンクになります。'
               ]);
 
-              section('見出し（行頭の # ）');
-              note('1行目は # がなくても自動でタイトルになります。# がない行は原文です。');
-              example('# タイトル', { level: 1, body: 'タイトル' });
-              example('## サブタイトル', { level: 2, body: 'サブタイトル' });
-              example('### サブサブタイトル', { level: 3, body: 'サブサブタイトル' });
-              example('#### 原文', { level: 4, body: '原文' });
-              example('##### ひとまわり小さい文', { level: 5, body: 'ひとまわり小さい文' });
+              section('履歴');
+              list([
+                  '鉛筆で編集、コピーアイコンでコピー、左端のごみ箱で削除します（削除の前に確認が出ます）。',
+                  '編集中は、上に「履歴のメモを編集中」と出ます。「更新して戻る」で上書き、「キャンセル」でやめます。編集前に書いていた下書きは、終わると元に戻ります。',
+                  '長いメモはタップで全文を開閉できます。'
+              ]);
 
-              section('文字の装飾');
-              example('**太字**');
-              example('*斜体*');
-              example('***太字斜体***');
-              example('@@下線@@', { desc: '@ と文字の間にスペースがあると無効です' });
-              example('||**そのまま** @@表示||', { body: '||**そのまま** @@表示||', desc: '|| で囲むと書体指定を消し、中の記号もそのまま表示します' });
+              section('書き出し・読み込み（.memol）');
+              list([
+                  '履歴の右上の矢印で、全メモを .memol ファイル（中身はJSON）に書き出し（下向き）／読み込み（上向き）できます。',
+                  '読み込みは今の履歴に追加されます。同じメモは重複せず、新しい方が残ります。'
+              ]);
 
-              section('色');
-              note('[先頭の記号]文字[末尾の記号] の形です。先頭＝文字色（大文字）、末尾＝下線色（小文字）。');
-              example('[RRR]赤文字[bbb]', { desc: '赤い文字＋青い下線' });
-              example('[RRR]赤文字[RRR]', { desc: '文字色だけ' });
-              example('[rrr]下線だけ[rrr]', { desc: '下線の色だけ' });
-              example('[000]黒[000]', { desc: '000 は先頭なら黒文字、末尾なら黒い下線' });
-              const chips = document.createElement('div');
-              chips.className = 'chips';
-              [['RRR', 'R', '赤'], ['OOO', 'O', 'オレンジ'], ['YYY', 'Y', '黄'], ['GGG', 'G', '緑'],
-               ['CCC', 'C', 'シアン'], ['BBB', 'B', '青'], ['MMM', 'M', 'マゼンタ'], ['000', '0', '黒'], ['FFF', 'F', '白']].forEach(([code, key, label]) => {
-                  const chip = document.createElement('span');
-                  chip.className = 'chip';
-                  const dot = document.createElement('i');
-                  dot.style.background = PALETTE[key];
-                  chip.appendChild(dot);
-                  chip.appendChild(document.createTextNode(
-                      key === '0' ? `${code} ${label}` : `${code} / ${code.toLowerCase()} ${label}`
-                  ));
-                  chips.appendChild(chip);
-              });
-              infoBody.appendChild(chips);
-              note('大文字=文字色、小文字=下線色。白は FFF が文字色、fff が下線色です。');
-
-              section('マーカー');
-              note('@[色]文字[000]@ の形です。色は大文字のみ。末尾は 000=黒文字、FFF=白文字。');
-              example('@[YYY]黄マーカー[000]@');
-              example('@[BBB]青マーカー[FFF]@');
-
-              section('コードブロック');
-              example('```\nconst a = 1;\n```', { code: 'const a = 1;', desc: '``` で囲むと複数行でも等幅で表示し、中の記号は解釈しません' });
-
-              section('日時の自動入力');
-              note('入力欄で =tim と打つと、日時の選択画面が開きます。形式を選んで「入力」を押すと =tim が日時に置き換わります。');
-              example('2026/10/06', { desc: '西暦' });
-              example('R8/10/06', { desc: '令和' });
-              example("'26/10/06", { desc: '年を2桁' });
-              example('2026/10/06 14:05:09', { desc: '「時刻もつける」で、分まで／秒まで付けられます（選んだ設定は次回も使われます）' });
-
-              section('リンク');
-              example('https://example.com', { desc: 'URLは自動で色付き＋下線のリンクになります' });
-
-              note('※ 太字・色などの書式は1行ごとに効きます（複数行にまたげません）。記号が閉じていないときは、そのまま文字として表示されます。');
+              section('書式が使いたいときは');
+              note('見出し・色・マーカー・コードブロックなどの書式や、プレビュー表示は Mεmol Pro で使えます。');
+              const a = document.createElement('a');
+              a.href = 'pro.html';
+              a.textContent = 'Mεmol Pro を開く';
+              a.style.cssText = 'color:#2563eb;text-decoration:underline;text-underline-offset:2px;font-size:0.875rem;';
+              infoBody.appendChild(a);
           }
 
           function copyToClipboard(text) {
@@ -1684,6 +1113,11 @@
 
           function openConfirmModal(id) {
               memoToDeleteId = id;
+              const memo = getHistory().find(m => m.id === id);
+              const firstLine = memo ? memo.text.split('\n')[0].replace(/^#+[ 　]?/, '').trim() : '';
+              const excerpt = document.getElementById('confirm-excerpt');
+              excerpt.textContent = firstLine.length > 40 ? firstLine.slice(0, 40) + '…' : firstLine;
+              excerpt.style.display = firstLine ? '' : 'none';
               confirmModal.classList.add('open');
           }
 
