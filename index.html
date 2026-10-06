@@ -27,19 +27,24 @@
         --red-500: #ef4444;
         --red-600: #dc2626;
       }
-      html { -webkit-text-size-adjust: 100%; }
+      html {
+        -webkit-text-size-adjust: 100%;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none; /* ページ全体のスクロール・バウンスを止める */
+      }
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', sans-serif;
         line-height: 1.5;
         background: var(--gray-50);
         color: var(--gray-800);
-        height: 100vh;
-        height: 100dvh;
+        position: fixed; /* iOS Safariでページ自体が下へ動くのを防ぐ */
+        inset: 0;
         width: 100%;
         overflow: hidden;
         display: flex;
         justify-content: center;
-        overscroll-behavior-y: none; /* スマホでのスクロールバウンスを防ぐ */
+        overscroll-behavior: none;
       }
 
       /* ===== レイアウト ===== */
@@ -399,6 +404,138 @@
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
       }
 
+      /* ===== 使い方 (iボタン) ===== */
+      .header-right { display: flex; align-items: center; gap: 0.5rem; }
+      #info-modal {
+        position: absolute;
+        inset: 0;
+        z-index: 80;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        pointer-events: none;
+      }
+      #info-modal.open { pointer-events: auto; }
+      #info-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      #info-modal.open #info-backdrop { opacity: 1; }
+      #info-sheet {
+        position: relative;
+        z-index: 10;
+        height: 90%;
+        background: #fff;
+        border-radius: 1.5rem 1.5rem 0 0;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #info-modal.open #info-sheet { transform: translateY(0); }
+      #info-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
+        font-size: 0.875rem;
+        color: var(--gray-700);
+      }
+      #info-body h3 {
+        margin: 1.25rem 0 0.375rem;
+        font-size: 0.9375rem;
+        font-weight: 700;
+        color: var(--teal-600);
+      }
+      #info-body p, #info-body li { line-height: 1.7; }
+      #info-body ul { padding-left: 1.1rem; }
+      #info-body .note { font-size: 0.8125rem; color: var(--gray-600); margin: 0.25rem 0; }
+      .ex { padding: 0.5rem 0; border-bottom: 1px solid var(--gray-100); display: flex; flex-direction: column; gap: 0.25rem; }
+      .ex code.src {
+        align-self: flex-start;
+        max-width: 100%;
+        padding: 0.125rem 0.375rem;
+        background: var(--gray-100);
+        border-radius: 0.25rem;
+        color: var(--gray-600);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans Mono CJK JP', monospace;
+        font-size: 0.75rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .ex .out { font-size: 0.9375rem; }
+      .ex .desc { font-size: 0.75rem; color: var(--gray-400); }
+      .chips { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.5rem; }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.5rem;
+        border: 1px solid var(--gray-200);
+        border-radius: 9999px;
+        font-size: 0.75rem;
+      }
+      .chip i { width: 0.875rem; height: 0.875rem; border-radius: 9999px; border: 1px solid rgba(0, 0, 0, 0.25); display: inline-block; }
+
+      /* ===== 日時入力モーダル (=tim) ===== */
+      #ts-modal {
+        position: absolute;
+        inset: 0;
+        z-index: 90;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      #ts-modal.open { pointer-events: auto; }
+      #ts-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      #ts-modal.open #ts-backdrop { opacity: 1; }
+      #ts-dialog {
+        position: relative;
+        z-index: 10;
+        width: 88%;
+        max-width: 24rem;
+        background: #fff;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        transform: scale(0.95);
+        opacity: 0;
+        transition: all 0.3s;
+      }
+      #ts-modal.open #ts-dialog { transform: scale(1); opacity: 1; }
+      #ts-dialog h3 { font-size: 1.125rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.75rem; }
+      .ts-opt {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.625rem 0.75rem;
+        border: 1px solid var(--gray-200);
+        border-radius: 0.75rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9375rem;
+        color: var(--gray-700);
+        cursor: pointer;
+      }
+      .ts-opt:has(input:checked) { border-color: var(--teal-500); background: #f0fdfa; }
+      .ts-opt input { accent-color: var(--teal-500); width: 1.125rem; height: 1.125rem; flex-shrink: 0; }
+      .ts-opt .ts-name { font-size: 0.75rem; color: var(--gray-400); margin-left: auto; white-space: nowrap; }
+      .ts-time-box { margin: 0.75rem 0 0.25rem; padding-top: 0.75rem; border-top: 1px solid var(--gray-100); }
+      #ts-time-opts { display: flex; gap: 0.5rem; margin: 0.5rem 0 0 1.5rem; }
+      #ts-time-opts .ts-opt { flex: 1; margin-bottom: 0; justify-content: center; }
+      #ts-time-opts.disabled { opacity: 0.4; pointer-events: none; }
+      #ts-dialog .row { display: flex; gap: 0.75rem; margin-top: 1rem; }
+      #ts-dialog .row .btn { flex: 1; padding: 0.625rem 1rem; }
+
       /* ===== 削除確認モーダル ===== */
       #confirm-modal {
         position: absolute;
@@ -446,9 +583,14 @@
           M<span class="accent">ε</span>mol
           <span class="ver">- v0.01</span>
         </h1>
-        <div id="save-indicator">
-          <span data-icon="check" data-size="14"></span>
-          保存済み
+        <div class="header-right">
+          <div id="save-indicator">
+            <span data-icon="check" data-size="14"></span>
+            保存済み
+          </div>
+          <button id="btn-info" class="round-btn" aria-label="使い方" title="使い方">
+            <span data-icon="info" data-size="18"></span>
+          </button>
         </div>
       </header>
 
@@ -504,6 +646,44 @@
       <!-- トースト通知 -->
       <div id="toast">コピーしました</div>
 
+      <!-- 日時入力 (=tim) -->
+      <div id="ts-modal">
+        <div id="ts-backdrop"></div>
+        <div id="ts-dialog" role="dialog" aria-label="日時を入力">
+          <h3>日時を入力</h3>
+          <label class="ts-opt"><input type="radio" name="ts-fmt" value="seireki"><span class="ts-ex"></span><span class="ts-name">西暦</span></label>
+          <label class="ts-opt"><input type="radio" name="ts-fmt" value="reiwa"><span class="ts-ex"></span><span class="ts-name">令和</span></label>
+          <label class="ts-opt"><input type="radio" name="ts-fmt" value="short"><span class="ts-ex"></span><span class="ts-name">年を2桁</span></label>
+          <div class="ts-time-box">
+            <label class="ts-check" style="display:flex;align-items:center;gap:0.625rem;font-size:0.9375rem;color:var(--gray-700);cursor:pointer;">
+              <input type="checkbox" id="ts-time" style="accent-color:var(--teal-500);width:1.125rem;height:1.125rem;"> 時刻もつける
+            </label>
+            <div id="ts-time-opts" class="disabled">
+              <label class="ts-opt"><input type="radio" name="ts-unit" value="min">分まで</label>
+              <label class="ts-opt"><input type="radio" name="ts-unit" value="sec">秒まで</label>
+            </div>
+          </div>
+          <div class="row">
+            <button id="btn-ts-cancel" class="btn btn-gray">キャンセル</button>
+            <button id="btn-ts-ok" class="btn btn-teal">入力</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 使い方 -->
+      <div id="info-modal">
+        <div id="info-backdrop"></div>
+        <div id="info-sheet" role="dialog" aria-label="使い方">
+          <div class="sheet-header">
+            <h2>使い方</h2>
+            <button id="btn-close-info" class="round-btn" aria-label="閉じる">
+              <span data-icon="x" data-size="18"></span>
+            </button>
+          </div>
+          <div id="info-body"></div>
+        </div>
+      </div>
+
       <!-- 削除確認モーダル -->
       <div id="confirm-modal">
         <div id="confirm-backdrop"></div>
@@ -531,6 +711,7 @@
               download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
               upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
               eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+              info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
               edit: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
               file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
           };
@@ -539,6 +720,11 @@
           }
           document.querySelectorAll('[data-icon]').forEach(el => {
               el.outerHTML = icon(el.dataset.icon, el.dataset.size || 20);
+          });
+
+          // キーボード表示などでページ全体がずれたら、すぐ元の位置に戻す
+          window.addEventListener('scroll', () => {
+              if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
           });
 
           // --- UI Elements ---
@@ -561,6 +747,8 @@
           const previewEl = document.getElementById('preview');
           const btnPreview = document.getElementById('btn-preview');
 
+          const infoModal = document.getElementById('info-modal');
+          const infoBody = document.getElementById('info-body');
           const confirmModal = document.getElementById('confirm-modal');
           const confirmBackdrop = document.getElementById('confirm-backdrop');
           const btnCancelDelete = document.getElementById('btn-cancel-delete');
@@ -670,6 +858,22 @@
               setPreview(false);                                          // タップで編集に戻る
           });
           btnImport.addEventListener('click', () => importFile.click());
+          document.getElementById('btn-info').addEventListener('click', openInfo);
+          document.getElementById('btn-close-info').addEventListener('click', closeInfo);
+          document.getElementById('info-backdrop').addEventListener('click', closeInfo);
+          document.addEventListener('keydown', (e) => {
+              if (e.key === 'Escape' && infoModal.classList.contains('open')) closeInfo();
+              if (e.key === 'Escape' && document.getElementById('ts-modal').classList.contains('open')) closeTs(false);
+          });
+
+          // =tim と打つと日時入力モーダルを開く（日本語入力の変換中は確定後に判定）
+          editor.addEventListener('input', (e) => { if (!e.isComposing) checkTimTrigger(); });
+          editor.addEventListener('compositionend', () => setTimeout(checkTimTrigger, 0));
+          document.getElementById('ts-backdrop').addEventListener('click', () => closeTs(false));
+          document.getElementById('btn-ts-cancel').addEventListener('click', () => closeTs(false));
+          document.getElementById('btn-ts-ok').addEventListener('click', () => closeTs(true));
+          document.getElementById('ts-time').addEventListener('change', updateTsUI);
+          document.querySelectorAll('input[name="ts-fmt"], input[name="ts-unit"]').forEach(r => r.addEventListener('change', updateTsUI));
           importFile.addEventListener('change', () => {
               const file = importFile.files && importFile.files[0];
               if (file) importMemos(file);
@@ -1217,6 +1421,226 @@
                   i++;
               }
               flush();
+          }
+
+          // --- =tim で日時を入力 ---
+          const TS_KEY = 'memol_timestamp_prefs';
+          let tsTriggerEnd = null; // 「=tim」の末尾の位置
+
+          function loadTsPrefs() {
+              const def = { fmt: 'seireki', time: false, unit: 'min' };
+              try {
+                  return Object.assign(def, JSON.parse(localStorage.getItem(TS_KEY) || '{}'));
+              } catch (e) {
+                  return def;
+              }
+          }
+
+          // fmt: seireki=2026/10/06  reiwa=R8/10/06  short='26/10/06
+          function formatTimestamp(d, fmt, withTime, unit) {
+              const p2 = n => String(n).padStart(2, '0');
+              const y = d.getFullYear();
+              const ys = fmt === 'reiwa' ? 'R' + (y - 2018)
+                  : fmt === 'short' ? "'" + p2(y % 100)
+                  : String(y);
+              let out = `${ys}/${p2(d.getMonth() + 1)}/${p2(d.getDate())}`;
+              if (withTime) {
+                  out += ` ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+                  if (unit === 'sec') out += ':' + p2(d.getSeconds());
+              }
+              return out;
+          }
+
+          function readTsForm() {
+              const fmt = document.querySelector('input[name="ts-fmt"]:checked');
+              const unit = document.querySelector('input[name="ts-unit"]:checked');
+              return {
+                  fmt: fmt ? fmt.value : 'seireki',
+                  time: document.getElementById('ts-time').checked,
+                  unit: unit ? unit.value : 'min'
+              };
+          }
+
+          // 選択肢の見本を、今の日時と今の設定で表示し直す
+          function updateTsUI() {
+              const f = readTsForm();
+              document.getElementById('ts-time-opts').classList.toggle('disabled', !f.time);
+              const now = new Date();
+              document.querySelectorAll('input[name="ts-fmt"]').forEach(r => {
+                  r.parentElement.querySelector('.ts-ex').textContent = formatTimestamp(now, r.value, f.time, f.unit);
+              });
+          }
+
+          function checkTimTrigger() {
+              if (editor.selectionStart !== editor.selectionEnd) return;
+              const pos = editor.selectionStart;
+              if (pos < 4) return;
+              if (!/^[=＝][tｔTＴ][iｉIＩ][mｍMＭ]$/.test(editor.value.slice(pos - 4, pos))) return;
+              openTs(pos);
+          }
+
+          function openTs(pos) {
+              tsTriggerEnd = pos;
+              const prefs = loadTsPrefs();
+              document.querySelector(`input[name="ts-fmt"][value="${prefs.fmt}"]`).checked = true;
+              document.querySelector(`input[name="ts-unit"][value="${prefs.unit}"]`).checked = true;
+              document.getElementById('ts-time').checked = !!prefs.time;
+              updateTsUI();
+              editor.blur();
+              document.getElementById('ts-modal').classList.add('open');
+          }
+
+          function closeTs(insert) {
+              const end = tsTriggerEnd;
+              document.getElementById('ts-modal').classList.remove('open');
+              tsTriggerEnd = null;
+              if (end === null) return;
+              let caret = end;
+              if (insert) {
+                  const f = readTsForm();
+                  localStorage.setItem(TS_KEY, JSON.stringify(f));
+                  const ts = formatTimestamp(new Date(), f.fmt, f.time, f.unit);
+                  const v = editor.value;
+                  const start = end - 4;
+                  if (start >= 0 && /^[=＝]/.test(v[start])) {
+                      editor.value = v.slice(0, start) + ts + v.slice(end);
+                      caret = start + ts.length;
+                      editor.dispatchEvent(new Event('input')); // 自動保存
+                  }
+              }
+              editor.focus();
+              editor.setSelectionRange(caret, caret);
+          }
+
+          // --- 使い方 (iボタン) ---
+          // 例は実際の描画関数で表示するので、書式を変えても説明と食い違わない
+          function openInfo() {
+              if (!infoBody.childElementCount) buildInfo();
+              infoModal.classList.add('open');
+              infoBody.scrollTop = 0;
+          }
+          function closeInfo() {
+              infoModal.classList.remove('open');
+          }
+
+          function buildInfo() {
+              const section = (title) => {
+                  const h = document.createElement('h3');
+                  h.textContent = title;
+                  infoBody.appendChild(h);
+              };
+              const note = (text) => {
+                  const p = document.createElement('p');
+                  p.className = 'note';
+                  p.textContent = text;
+                  infoBody.appendChild(p);
+              };
+              const list = (items) => {
+                  const ul = document.createElement('ul');
+                  items.forEach(t => {
+                      const li = document.createElement('li');
+                      li.textContent = t;
+                      ul.appendChild(li);
+                  });
+                  infoBody.appendChild(ul);
+              };
+              // 書いた記号(src)と、その見え方(out)を1組で並べる
+              const example = (src, opts = {}) => {
+                  const box = document.createElement('div');
+                  box.className = 'ex';
+                  const code = document.createElement('code');
+                  code.className = 'src';
+                  code.textContent = src;
+                  const out = document.createElement('div');
+                  out.className = 'out card-text';
+                  if (opts.code) {
+                      const pre = document.createElement('pre');
+                      pre.className = 'codeblock';
+                      pre.textContent = opts.code;
+                      out.appendChild(pre);
+                  } else {
+                      const line = document.createElement('div');
+                      line.className = 'ln h' + (opts.level || 4);
+                      renderInline(line, opts.body !== undefined ? opts.body : src);
+                      out.appendChild(line);
+                  }
+                  box.appendChild(code);
+                  box.appendChild(out);
+                  if (opts.desc) {
+                      const d = document.createElement('div');
+                      d.className = 'desc';
+                      d.textContent = opts.desc;
+                      box.appendChild(d);
+                  }
+                  infoBody.appendChild(box);
+              };
+
+              section('基本');
+              list([
+                  '入力すると自動で保存されます（書きかけも残ります）。',
+                  '「保存して次へ」で履歴に追加して、入力欄を空にします。',
+                  '「表示」で書式を反映した見た目を確認できます。「編集」で入力に戻ります。',
+                  '「履歴」では、鉛筆で編集、コピー、ごみ箱で削除ができます。長いメモはタップで開閉します。',
+                  '履歴の右上の矢印で、全メモを .memol ファイルに書き出し（下向き）／読み込み（上向き）できます。'
+              ]);
+
+              section('見出し（行頭の # ）');
+              note('1行目は # がなくても自動でタイトルになります。# がない行は原文です。');
+              example('# タイトル', { level: 1, body: 'タイトル' });
+              example('## サブタイトル', { level: 2, body: 'サブタイトル' });
+              example('### サブサブタイトル', { level: 3, body: 'サブサブタイトル' });
+              example('#### 原文', { level: 4, body: '原文' });
+              example('##### ひとまわり小さい文', { level: 5, body: 'ひとまわり小さい文' });
+
+              section('文字の装飾');
+              example('**太字**');
+              example('*斜体*');
+              example('***太字斜体***');
+              example('@@下線@@', { desc: '@ と文字の間にスペースがあると無効です' });
+              example('||**そのまま** @@表示||', { body: '||**そのまま** @@表示||', desc: '|| で囲むと書体指定を消し、中の記号もそのまま表示します' });
+
+              section('色');
+              note('[先頭の記号]文字[末尾の記号] の形です。先頭＝文字色（大文字）、末尾＝下線色（小文字）。');
+              example('[RRR]赤文字[bbb]', { desc: '赤い文字＋青い下線' });
+              example('[RRR]赤文字[RRR]', { desc: '文字色だけ' });
+              example('[rrr]下線だけ[rrr]', { desc: '下線の色だけ' });
+              example('[000]黒[000]', { desc: '000 は先頭なら黒文字、末尾なら黒い下線' });
+              const chips = document.createElement('div');
+              chips.className = 'chips';
+              [['RRR', 'R', '赤'], ['OOO', 'O', 'オレンジ'], ['YYY', 'Y', '黄'], ['GGG', 'G', '緑'],
+               ['CCC', 'C', 'シアン'], ['BBB', 'B', '青'], ['MMM', 'M', 'マゼンタ'], ['000', '0', '黒'], ['FFF', 'F', '白']].forEach(([code, key, label]) => {
+                  const chip = document.createElement('span');
+                  chip.className = 'chip';
+                  const dot = document.createElement('i');
+                  dot.style.background = PALETTE[key];
+                  chip.appendChild(dot);
+                  chip.appendChild(document.createTextNode(
+                      key === '0' ? `${code} ${label}` : `${code} / ${code.toLowerCase()} ${label}`
+                  ));
+                  chips.appendChild(chip);
+              });
+              infoBody.appendChild(chips);
+              note('大文字=文字色、小文字=下線色。白は FFF が文字色、fff が下線色です。');
+
+              section('マーカー');
+              note('@[色]文字[000]@ の形です。色は大文字のみ。末尾は 000=黒文字、FFF=白文字。');
+              example('@[YYY]黄マーカー[000]@');
+              example('@[BBB]青マーカー[FFF]@');
+
+              section('コードブロック');
+              example('```\nconst a = 1;\n```', { code: 'const a = 1;', desc: '``` で囲むと複数行でも等幅で表示し、中の記号は解釈しません' });
+
+              section('日時の自動入力');
+              note('入力欄で =tim と打つと、日時の選択画面が開きます。形式を選んで「入力」を押すと =tim が日時に置き換わります。');
+              example('2026/10/06', { desc: '西暦' });
+              example('R8/10/06', { desc: '令和' });
+              example("'26/10/06", { desc: '年を2桁' });
+              example('2026/10/06 14:05:09', { desc: '「時刻もつける」で、分まで／秒まで付けられます（選んだ設定は次回も使われます）' });
+
+              section('リンク');
+              example('https://example.com', { desc: 'URLは自動で色付き＋下線のリンクになります' });
+
+              note('※ 太字・色などの書式は1行ごとに効きます（複数行にまたげません）。記号が閉じていないときは、そのまま文字として表示されます。');
           }
 
           function copyToClipboard(text) {
